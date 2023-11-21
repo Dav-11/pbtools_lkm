@@ -1,15 +1,7 @@
 all:
-	gcc \
-	    -O2 \
-	    -Wall \
-	    -Wno-gnu-alignof-expression \
-	    -I ../../lib/include \
-	    -Igenerated \
-	    generated/*.c \
-	    ../../lib/src/pbtools.c \
-	    main.c \
-	    -o main
-	./main
+	$(MAKE) generate
+	$(MAKE) build
+	$(MAKE) run
 
 generate:
 	rm -rf generated
@@ -17,3 +9,18 @@ generate:
 	cd generated && \
 	    env PYTHONPATH=../../.. \
 		python3 -m pbtools generate_c_source ../hello_world.proto
+
+build:
+	gcc \
+		-O2 \
+		-Wall \
+		-Wno-gnu-alignof-expression \
+		-I ../../lib/include \
+		-Igenerated \
+		generated/*.c \
+		../../lib/src/pbtools.c \
+		main.c \
+		-o main
+
+run:
+	./main
