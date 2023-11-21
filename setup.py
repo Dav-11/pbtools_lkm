@@ -14,7 +14,7 @@ def find_version():
 setup(name='pbtools',
       version=find_version(),
       description='Google Protocol Buffers tools.',
-      long_description=open('README.rst', 'r').read(),
+      long_description=open('README.adoc', 'r').read(),
       author='Erik Moqvist',
       author_email='erik.moqvist@gmail.com',
       license='MIT',

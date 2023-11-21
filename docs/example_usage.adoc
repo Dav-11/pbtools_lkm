@@ -1,0 +1,129 @@
+= Example usage
+
+== C source code
+
+In this example we use the simple proto-file hello_world.proto.
+
+[,proto]
+----
+syntax = "proto3";
+
+package hello_world;
+
+message Foo {
+   int32 bar = 1;
+}
+----
+
+Generate C source code from the proto-file.
+
+[,sh]
+----
+$ pbtools generate_c_source examples/hello_world/hello_world.proto
+----
+
+See hello_world.h and hello_world.c for the contents of the
+generated files.
+
+We'll use the generated types and functions below.
+
+[,c]
+----
+struct hello_world_foo_t {
+  struct pbtools_message_base_t base;
+  int32_t bar;
+};
+
+struct hello_world_foo_t *hello_world_foo_new(
+   void *workspace_p,
+   size_t size);
+
+int hello_world_foo_encode(
+   struct hello_world_foo_t *self_p,
+   void *encoded_p,
+   size_t size);
+
+int hello_world_foo_decode(
+   struct hello_world_foo_t *self_p,
+   const uint8_t *encoded_p,
+   size_t size);
+----
+
+Encode and decode the Foo-message in main.c.
+
+[,c]
+----
+#include <stdio.h>
+#include "hello_world.h"
+
+int main(int argc, const char *argv[])
+{
+   int size;
+   uint8_t workspace[64];
+   uint8_t encoded[16];
+   struct hello_world_foo_t *foo_p;
+
+   /* Encode. */
+   foo_p = hello_world_foo_new(&workspace[0], sizeof(workspace));
+
+   if (foo_p == NULL) {
+       return (1);
+   }
+
+   foo_p->bar = 78;
+   size = hello_world_foo_encode(foo_p, &encoded[0], sizeof(encoded));
+
+   if (size < 0) {
+       return (2);
+   }
+
+   printf("Successfully encoded Foo into %d bytes.\n", size);
+
+   /* Decode. */
+   foo_p = hello_world_foo_new(&workspace[0], sizeof(workspace));
+
+   if (foo_p == NULL) {
+       return (3);
+   }
+
+   size = hello_world_foo_decode(foo_p, &encoded[0], size);
+
+   if (size < 0) {
+       return (4);
+   }
+
+   printf("Successfully decoded %d bytes into Foo.\n", size);
+   printf("Foo.bar: %d\n", foo_p->bar);
+
+   return (0);
+}
+----
+
+Build and run the program.
+
+[,sh]
+----
+$ gcc -I lib/include main.c hello_world.c lib/src/pbtools.c -o main
+$ ./main
+Successfully encoded Foo into 2 bytes.
+Successfully decoded 2 bytes into Foo.
+Foo.bar: 78
+----
+
+See examples/hello_world for all files used in this example.
+
+== Command line tool
+
+=== The generate C source subcommand
+
+Below is an example of how to generate C source code from a
+proto-file.
+
+[,sh]
+----
+$ pbtools generate_c_source examples/address_book/address_book.proto
+----
+
+See address_book.h and address_book.c for the contents of the
+generated files.
+
