@@ -1,0 +1,12 @@
+= pbtools_lkm
+:hide-uri-scheme:
+:toc:
+
+include::docs/about.asciidoc[leveloffset=1]
+include::docs/install.asciidoc[leveloffset=1]
+include::docs/c_codegen.asciidoc[leveloffset=1]
+
+== Benchmark
+See the link:benchmark/[benchmark] folder for a benchmark of a few C/C++ protobuf libraries.
+
+include::docs/example_usage.asciidoc[leveloffset=1]
