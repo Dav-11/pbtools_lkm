@@ -26,3 +26,13 @@ $(LIBRARY):
 	    -c \
 	    -o pbtools.o
 	$(AR) cr $(LIBRARY) pbtools.o
+
+build:
+	$(CC) $(CFLAGS_EXTRA) \
+	    -O2 \
+	    -std=gnu11 \
+	    -Wno-gnu-alignof-expression \
+	    -Iinclude src/pbtools.c \
+	    -c \
+	    -o pbtools.o
+	$(AR) cr $(LIBRARY) pbtools.o
