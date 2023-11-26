@@ -1,6 +1,4 @@
-/*
- * 
- */
+// SPDX-License-Identifier: MIT
 
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
@@ -15,13 +13,13 @@ MODULE_VERSION("0.1");
 
 static int __init pbtools_lkm_init(void)
 {
-	printk(KERN_INFO "Hello, world\n");
+	pr_info("Hello, world\n");
 	return 0;		/* success */
 }
 
 static void __exit pbtools_lkm_exit(void)
 {
-	printk(KERN_INFO "Goodbye, world\n");
+	pr_info("Goodbye, world\n");
 }
 
 module_init(pbtools_lkm_init);

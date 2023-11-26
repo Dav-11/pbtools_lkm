@@ -55,7 +55,7 @@ install:
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
-	rm $(PWD)/.vscode/compile_commands.json
+	# rm $(PWD)/../.vscode/compile_commands.json
 	rm -f *~   # from 'indent'
 
 load:

@@ -1,10 +1,9 @@
-# pbtools_lkm
-Protobuf implementation as a kernel module.
+# Module
+This folder contains the module itself
 
-## Docs
-See inside the [docs](docs/) folder.
+## Build
+```shell
+make build
+```
 
-## Thanks to
-- https://github.com/eerimoq/pbtools for the library I used for the port
-- https://github.com/gschwaer/vscode-kernel-module for the vscode setup
-- https://gitlab.com/phip1611/cmake-kernel-module for the clion setup
+## Lint & static_analysis

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * The MIT License (MIT)
  *
@@ -367,9 +368,9 @@ extern "C" {
 
 #if PBTOOLS_CONFIG_FLOAT == 1
 
-	float pbtools_decoder_read_float(struct pbtools_decoder_t *self_p, int wire_type);
+	uint32_t pbtools_decoder_read_float(struct pbtools_decoder_t *self_p, int wire_type);
 
-	double pbtools_decoder_read_double(struct pbtools_decoder_t *self_p, int wire_type);
+	uint64_t pbtools_decoder_read_double(struct pbtools_decoder_t *self_p, int wire_type);
 
 #endif
 
