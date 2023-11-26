@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-/**
+/* SPDX-License-Identifier: MIT
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Erik Moqvist
@@ -155,12 +154,12 @@ extern "C" {
 		void *items_p;
 	};
 
-	typedef void (*pbtools_message_init_t)(void *self_p, struct pbtools_heap_t * heap_p);
+	typedef void (*pbtools_message_init_t)(void *self_p, struct pbtools_heap_t *heap_p);
 
-	typedef void (*pbtools_message_encode_inner_t)(struct pbtools_encoder_t * encoder_p,
+	typedef void (*pbtools_message_encode_inner_t)(struct pbtools_encoder_t *encoder_p,
 						       void *self_p);
 
-	typedef void (*pbtools_message_decode_inner_t)(struct pbtools_decoder_t * decoder_p,
+	typedef void (*pbtools_message_decode_inner_t)(struct pbtools_decoder_t *decoder_p,
 						       void *self_p);
 
 	void pbtools_encoder_write_int32(struct pbtools_encoder_t *self_p,
@@ -577,12 +576,12 @@ extern "C" {
 				  size_t message_size, pbtools_message_init_t message_init);
 
 	int pbtools_message_encode(struct pbtools_message_base_t *self_p,
-				   uint8_t * encoded_p,
+				   uint8_t *encoded_p,
 				   size_t size,
 				   pbtools_message_encode_inner_t message_encode_inner);
 
 	int pbtools_message_decode(struct pbtools_message_base_t *self_p,
-				   const uint8_t * encoded_p,
+				   const uint8_t *encoded_p,
 				   size_t size,
 				   pbtools_message_decode_inner_t message_decode_inner);
 
