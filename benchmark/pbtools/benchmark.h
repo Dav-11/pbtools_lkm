@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-#include "pbtools.h"
+#include "../pbtools.h"
 
 /**
  * Enum benchmark.Enum.

@@ -9,3 +9,5 @@ generate:
 	$(MAKE) -C hello_world generate
 	$(MAKE) -C oneof generate
 	$(MAKE) -C repeated generate
+
+new

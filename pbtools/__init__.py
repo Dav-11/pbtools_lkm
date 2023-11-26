@@ -10,8 +10,7 @@ __author__ = 'Erik Moqvist'
 
 
 def _main():
-    parser = argparse.ArgumentParser(
-        description='Various Google Protobuf utilities.')
+    parser = argparse.ArgumentParser(description='Various Google Protobuf utilities.')
 
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('--version',
@@ -20,19 +19,14 @@ def _main():
                         help='Print version information and exit.')
 
     # Workaround to make the subparser required in Python 3.
-    subparsers = parser.add_subparsers(title='subcommands',
-                                       dest='subcommand')
+    subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
     subparsers.required = True
 
     # Import when used for less dependencies. For example, curses is
     # not part of all Python builds.
     from .subparsers import generate_c_source
-    from .subparsers import generate_mys_source
-    from .subparsers import generate_rust_source
 
     generate_c_source.add_subparser(subparsers)
-    generate_mys_source.add_subparser(subparsers)
-    generate_rust_source.add_subparser(subparsers)
 
     args = parser.parse_args()
 

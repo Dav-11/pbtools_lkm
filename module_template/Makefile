@@ -65,6 +65,13 @@ load:
 unload:
 	sudo rmmod pbtools_lkm
 
+generate:
+	rm -rf generated
+	mkdir -p generated
+	cd generated && \
+	    env PYTHONPATH=../.. \
+		python3 -m pbtools generate_c_source ../proto/benchmark.proto
+
 INDENT := indent
 
 # code-style : "wrapper" target over the following kernel code style targets
