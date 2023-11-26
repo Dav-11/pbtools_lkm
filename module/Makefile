@@ -30,7 +30,8 @@ obj-m 			+= pbtools_lkm.o
 # YOU DON'T need this IF you have *.c-file with the name of the final kernel module :)
 pbtools_lkm-y 	:= \
 	main.o \
-	pbtools.o
+	pbtools.o \
+	generated/hello_world.o
 
 build:
 
@@ -42,7 +43,7 @@ build:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 	# vscode fix
-	$(KDIR)/scripts/clang-tools/gen_compile_commands.py --directory $(PWD) --output $(PWD)/../.vscode/compile_commands.json
+	$(KDIR)/scripts/clang-tools/gen_compile_commands.py --directory $(PWD) --output $(PWD)/.vscode/compile_commands.json
 
 	# fix include paths (they are relative to the kernel dir)
 	sed -i "s|-I\./|-I$(KDIR)/|g" $(PWD)/.vscode/compile_commands.json
@@ -50,12 +51,12 @@ build:
 	sed -i "s|-Iubuntu/|-I$(KDIR)/ubuntu/|g" $(PWD)/.vscode/compile_commands.json
 
 install:
-	sudo $(MAKE) -C $(KDIR) M=$(PWD) modules_install
-	sudo depmod
+	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
+	depmod -A
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
-	# rm $(PWD)/../.vscode/compile_commands.json
+	rm -f $(PWD)/.vscode/compile_commands.json
 	rm -f *~   # from 'indent'
 
 load:
