@@ -6,8 +6,7 @@
 *.mod
 *.mod.cmd
 *.ko.cmd
-*.symvers.cmd
-*.order.cmd
+.*.cmd
 modules.order
 Module.symvers
 cmake-build-debug
