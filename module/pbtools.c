@@ -2026,7 +2026,7 @@ int pbtools_sub_message_alloc(struct pbtools_message_base_t **message_pp,
 			       sub_message_size, __alignof__(struct pbtools_message_base_t));
 
 	if (message_p == NULL)
-        return -1;
+		return -1;
 
 	message_init(message_p, heap_p);
 	*message_pp = message_p;
