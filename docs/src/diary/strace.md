@@ -1,22 +1,18 @@
-= Understanding what syscall are used
-:strace: https://strace.io/
+# Understanding what syscall are used
+[strace]: https://strace.io/
 
-== examples/hello_world
+Running the example/hello_world with [strace][strace]:
 
-Running the example with {strace}[strace]:
-
-[,sh]
-----
+```shell
 cd examples/hello_world
 make generate # (re)compile proto files
 make build    # build executable
 strace ./main # run executable with strace
-----
+```
 
 Output:
 
-[%linenums,text]
-----
+```text
 execve("./main", ["./main"], 0x7fffd8ad35c0 /* 55 vars */) = 0
 brk(NULL)                               = 0x56258bc45000
 arch_prctl(0x3001 /* ARCH_??? */, 0x7ffd4d5cc2a0) = -1 EINVAL (Invalid argument)
@@ -51,65 +47,62 @@ newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}, AT_EMPT
 getrandom("\x59\xc5\x69\x55\x46\x3a\x01\x0c", 8, GRND_NONBLOCK) = 8
 brk(NULL)                               = 0x56258bc45000
 brk(0x56258bc66000)                     = 0x56258bc66000
-write(1, "Successfully encoded Foo into 2 "..., 39Successfully encoded Foo into 2 bytes.
-) = 39
-write(1, "Successfully decoded 2 bytes int"..., 39Successfully decoded 2 bytes into Foo.
-) = 39
-write(1, "Foo.bar: 78\n", 12Foo.bar: 78
-)           = 12
+write(1, "Successfully encoded Foo into 2 "..., 39Successfully encoded Foo into 2 bytes.) = 39
+write(1, "Successfully decoded 2 bytes int"..., 39Successfully decoded 2 bytes into Foo.) = 39
+write(1, "Foo.bar: 78\n", 12Foo.bar: 78)           = 12
 exit_group(0)                           = ?
 +++ exited with 0 +++
-----
+```
 
-=== Analysis
+## Analysis
 
-==== 01 execve
+### execve
 - https://www.man7.org/linux/man-pages/man2/execve.2.html[man]
 
 Replace the current running program with the one in $1 (./main)
 
-==== 02 brk(NULL)
+### brk(NULL)
 - https://man7.org/linux/man-pages/man2/brk.2.html[man]
 
 Check the current position of _program break_ (check where the current heap ends)
 
-==== 03 arch_prctl(0x3001 /* ARCH_??? */, 0x7ffd4d5cc2a0)
+### arch_prctl(0x3001 /* ARCH_??? */, 0x7ffd4d5cc2a0)
 - https://www.man7.org/linux/man-pages/man2/arch_prctl.2.html[man]
 
-==== 04 mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
+### mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
 - https://www.man7.org/linux/man-pages/man2/mmap.2.html[man]
 - https://stackoverflow.com/a/39945292[stackoverflow post]
 
 Alloc 8KB
 
-==== 05 access("/etc/ld.so.preload", R_OK)
+### access("/etc/ld.so.preload", R_OK)
 - https://linux.die.net/man/8/ld.so[ls.so]
 - https://superuser.com/questions/1183037/what-is-does-ld-so-preload-do[ld.so.preload]
 
 Checks if we can access the file `/etc/ld.so.preload` (list of libraries to load for linking)
 
-==== 06 openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC)
+### openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC)
 - https://linux.die.net/man/2/openat[man]
 
 Open the file
 
-==== 07 newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=81193, ...}, AT_EMPTY_PATH)
+### newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=81193, ...}, AT_EMPTY_PATH)
 Get info on the file
 
-==== 08 mmap(NULL, 81193, PROT_READ, MAP_PRIVATE, 3, 0)
+### mmap(NULL, 81193, PROT_READ, MAP_PRIVATE, 3, 0)
 Alloc 79KB
 
-==== 09 close(3)
+### close(3)
 Close `/etc/ld.so.preload`
 
-==== 10 openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC)
+### openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC)
 Open `/lib/x86_64-linux-gnu/libc.so.6` file (shared library)
 
-==== 11 read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\202\2\0\0\0\0\0"..., 832)
+### read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\202\2\0\0\0\0\0"..., 832)
 Read the library
 
-==== 12 pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64)
+### pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64)
 Read 784 bytes from file from pos 64
 
-==== 24 close(3)
+### close(3)
 Close `/lib/x86_64-linux-gnu/libc.so.6` file

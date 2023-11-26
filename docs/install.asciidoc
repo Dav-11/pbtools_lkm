@@ -1,8 +1,0 @@
-= Installation
-
-.Install helper tool
-[,python]
-----
-pip install pbtools
-----
-
