@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package foo;
+
+message Bar {
+    bool v1 = 1;
+}
+
+message Fie {
+    int32 v2 = 1;
+    Bar v3 = 2;
+}
