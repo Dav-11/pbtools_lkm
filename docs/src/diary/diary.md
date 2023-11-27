@@ -1,7 +1,7 @@
 # Development Diary
 
 TODO:
-- [x] Run runtime in kernel space
+- [x] Run example in kernel space
 - [ ] Run benchmark in kernel space
 
 Maybe:
