@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package missing_type;
-
-message Message {
-    MissingType value = 1;
-}

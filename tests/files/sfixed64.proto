@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package sfixed64;
-
-message Message {
-    sfixed64 value = 1;
-}

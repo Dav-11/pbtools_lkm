@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-import "no_package_imported.proto";
-
-package npi;
-
-message Message2 {
-    NoPackageImportedMessage v3 = 1;
-}

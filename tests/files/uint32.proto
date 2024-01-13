@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package uint32;
-
-message Message {
-    uint32 value = 1;
-}

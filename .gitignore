@@ -1,11 +1,36 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
 # C extensions
 *.so
 *.o
 a.out*
+
+
+# SDE
+*~
+*.swp
+*.swo
+**/.idea
+**/.vscode
+
+#macOS
+.DS_Store
+
+# test
+test_gen
+
+
+!**/c_cpp_properties.json
+!**/module_hello.code-workspace
+
+
+
+
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+
 
 # Distribution / packaging
 .Python
@@ -58,13 +83,10 @@ docs/_build/
 # PyBuilder
 target/
 
-# Vim IDE
-*~
-*.swp
-*.swo
+
 
 # IntelliJ IDEA
-**/.idea/
+
 
 main
 *_pb2.py

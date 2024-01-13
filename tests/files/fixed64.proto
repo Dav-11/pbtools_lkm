@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package fixed64;
-
-message Message {
-    fixed64 value = 1;
-}

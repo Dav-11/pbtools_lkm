@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package sint32;
-
-message Message {
-    sint32 value = 1;
-}
