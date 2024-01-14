@@ -17,14 +17,7 @@ a.out*
 # test
 test_gen
 pbtools_lkm
-
-
-!**/c_cpp_properties.json
-!**/module_hello.code-workspace
-
-
-
-
+bin/
 
 
 # Byte-compiled / optimized / DLL files
