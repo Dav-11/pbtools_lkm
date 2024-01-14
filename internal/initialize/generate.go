@@ -35,10 +35,10 @@ var (
 	//go:embed module_template/cmake/FindKernelHeaders.cmake
 	findKernelHeaders string
 
-	//go:embed module_template/.vscode/c_cpp_properties.json
+	//go:embed module_template/.vscode_t/c_cpp_properties.json
 	cCppProperties string
 
-	//go:embed module_template/.vscode/module_hello.code-workspace
+	//go:embed module_template/.vscode_t/module_hello.code-workspace
 	moduleHello string
 )
 
