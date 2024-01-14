@@ -50,7 +50,7 @@ HEADER_FMT = '''\
 extern "C" {{
 #endif
 
-#include "pbtools.h"
+#include "../pbtools.h"
 {includes}\
 
 {types}
@@ -721,7 +721,9 @@ class Generator:
             type = f'uint{type[5:]}_t '
         elif type in ['sfixed32', 'sfixed64']:
             type = f'int{type[6:]}_t '
-        elif type in ['float', 'double', 'bool']:
+        elif type in ['float', 'double']: #TODO: use two int instead of float
+            type = f'{type} '
+        elif type in ['bool']:
             type = f'{type} '
         elif type == 'bytes':
             type = f'struct pbtools_bytes_t '
@@ -749,7 +751,9 @@ class Generator:
             type = f'uint{type[5:]}_t '
         elif type in ['sfixed32', 'sfixed64']:
             type = f'int{type[6:]}_t '
-        elif type in ['float', 'double', 'bool']:
+        elif type in ['float', 'double']: #TODO: use two int instead of float
+            type = f'{type} '
+        elif type in ['bool']:
             type = f'{type} '
         elif type == 'bytes':
             type = f'struct pbtools_bytes_t '
