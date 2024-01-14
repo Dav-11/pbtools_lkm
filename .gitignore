@@ -16,6 +16,7 @@ a.out*
 
 # test
 test_gen
+pbtools_lkm
 
 
 !**/c_cpp_properties.json

@@ -1,4 +1,4 @@
-package generate
+package initialize
 
 import (
 	_ "embed"

@@ -65,12 +65,17 @@ load:
 unload:
 	sudo rmmod pbtools_lkm
 
+requirements:
+	python3 -m venv ../..
+	env PYTHONPATH=../.. \
+		pip3 install textparser
+
 generate:
 	rm -rf generated
 	mkdir -p generated
 	cd generated && \
 	    env PYTHONPATH=../.. \
-		python3 -m pbtools generate_c_source ../proto/benchmark.proto
+		python3 -m pbtools generate_c_source ../proto/hello_world.proto
 
 INDENT := indent
 
