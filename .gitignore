@@ -3,7 +3,6 @@
 *.o
 a.out*
 
-
 # SDE
 *~
 *.swp
@@ -18,6 +17,11 @@ a.out*
 test_gen
 pbtools_lkm
 bin/
+
+# pyenv
+include
+lib
+pyvenv.cfg
 
 
 # Byte-compiled / optimized / DLL files

@@ -11,5 +11,7 @@ test:
 	go run cmd/init/init.go init test_gen
 
 clean:
-	rm -rf test_gen
-	rm -f pbtools_lkm
+	rm -rf 	test_gen
+	rm -rf 	lib
+	rm -rf 	include
+	rm -f 	pyvenv.cfg

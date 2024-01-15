@@ -1,12 +1,6 @@
 package compile
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/alecthomas/kong"
-	"github.com/alecthomas/repr"
-
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -250,25 +244,4 @@ type MapType struct {
 
 	Key   *Type `"map" "<" @@`
 	Value *Type `"," @@ ">"`
-}
-
-var (
-	parser = participle.MustBuild[Proto](participle.UseLookahead(2))
-
-	cli struct {
-		Files []string `required existingfile arg help:"Protobuf files."`
-	}
-)
-
-func main() {
-	ctx := kong.Parse(&cli)
-
-	for _, file := range cli.Files {
-		fmt.Println(file)
-		r, err := os.Open(file)
-		ctx.FatalIfErrorf(err, "")
-		proto, err := parser.Parse("", r)
-		ctx.FatalIfErrorf(err, "")
-		repr.Println(proto, repr.Hide(&lexer.Position{}))
-	}
 }
