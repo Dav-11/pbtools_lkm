@@ -280,7 +280,7 @@ void pbtools_encoder_write_sfixed64(struct pbtools_encoder_t *self_p, int field_
 
 #if PBTOOLS_CONFIG_FLOAT == 1
 
-void pbtools_encoder_write_float(struct pbtools_encoder_t *self_p, int field_number, float value)
+void pbtools_encoder_write_float(struct pbtools_encoder_t *self_p, int field_number, uint32_t value)
 {
 	uint32_t data;
 
@@ -288,7 +288,7 @@ void pbtools_encoder_write_float(struct pbtools_encoder_t *self_p, int field_num
 	pbtools_encoder_write_fixed32(self_p, field_number, data);
 }
 
-void pbtools_encoder_write_double(struct pbtools_encoder_t *self_p, int field_number, double value)
+void pbtools_encoder_write_double(struct pbtools_encoder_t *self_p, int field_number, uint64_t value)
 {
 	uint64_t data;
 
@@ -407,7 +407,7 @@ void pbtools_encoder_write_sfixed64_always(struct pbtools_encoder_t *self_p,
 #if PBTOOLS_CONFIG_FLOAT == 1
 
 void pbtools_encoder_write_float_always(struct pbtools_encoder_t *self_p,
-					int field_number, float value)
+					int field_number, uint32_t value)
 {
 	uint32_t data;
 
@@ -416,7 +416,7 @@ void pbtools_encoder_write_float_always(struct pbtools_encoder_t *self_p,
 }
 
 void pbtools_encoder_write_double_always(struct pbtools_encoder_t *self_p,
-					 int field_number, double value)
+					 int field_number, uint64_t value)
 {
 	uint64_t data;
 

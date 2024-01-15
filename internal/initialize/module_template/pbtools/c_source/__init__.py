@@ -721,8 +721,10 @@ class Generator:
             type = f'uint{type[5:]}_t '
         elif type in ['sfixed32', 'sfixed64']:
             type = f'int{type[6:]}_t '
-        elif type in ['float', 'double']: #TODO: use two int instead of float
-            type = f'{type} '
+        elif type in ['float']:
+            type = 'uint32_t '
+        elif type in ['double']:
+            type = 'uint64_t '
         elif type in ['bool']:
             type = f'{type} '
         elif type == 'bytes':
@@ -751,8 +753,10 @@ class Generator:
             type = f'uint{type[5:]}_t '
         elif type in ['sfixed32', 'sfixed64']:
             type = f'int{type[6:]}_t '
-        elif type in ['float', 'double']: #TODO: use two int instead of float
-            type = f'{type} '
+        elif type in ['float']:
+            type = 'uint32_t '
+        elif type in ['double']:
+            type = 'uint64_t '
         elif type in ['bool']:
             type = f'{type} '
         elif type == 'bytes':

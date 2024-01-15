@@ -100,12 +100,12 @@ extern "C" {
 
 	struct pbtools_repeated_float_t {
 		int length;
-		float *items_p;
+		uint32_t *items_p;
 	};
 
 	struct pbtools_repeated_double_t {
 		int length;
-		double *items_p;
+		uint64_t *items_p;
 	};
 
 #endif
@@ -171,10 +171,10 @@ extern "C" {
 #if PBTOOLS_CONFIG_FLOAT == 1
 
 	void pbtools_encoder_write_float(struct pbtools_encoder_t *self_p,
-					 int field_number, float value);
+					 int field_number, uint32_t value);
 
 	void pbtools_encoder_write_double(struct pbtools_encoder_t *self_p,
-					  int field_number, double value);
+					  int field_number, uint64_t value);
 
 #endif
 
@@ -223,10 +223,10 @@ extern "C" {
 #if PBTOOLS_CONFIG_FLOAT == 1
 
 	void pbtools_encoder_write_float_always(struct pbtools_encoder_t *self_p,
-						int field_number, float value);
+						int field_number, uint32_t value);
 
 	void pbtools_encoder_write_double_always(struct pbtools_encoder_t *self_p,
-						 int field_number, double value);
+						 int field_number, uint64_t value);
 
 #endif
 
