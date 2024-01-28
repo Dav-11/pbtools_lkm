@@ -25,5 +25,5 @@ clean:
 
 .PHONY: docs
 docs:
-	docker build -t Dav-11/pbtools_lkm:local -f docs/.docker/Dockerfile .
-	docker run --rm --name pbtools-lkm-docs -p 9090:80 Dav-11/pbtools_lkm:local
+	docker build -t dav-11/pbtools_lkm:local -f docs/.docker/Dockerfile .
+	docker run --rm --name pbtools-lkm-docs -p 9090:80 dav-11/pbtools_lkm:local
