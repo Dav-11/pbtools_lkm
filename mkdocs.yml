@@ -1,0 +1,14 @@
+site_name: pbtools_lkm Docs
+site_url: http://localhost:9090
+repo_url: https://github.com/Dav-11/pbtools_lkm
+theme:
+  name: readthedocs
+plugins:
+  - search
+  - mermaid2
+  - plantuml:
+      puml_url: https://www.plantuml.com/plantuml/
+
+markdown_extensions:
+  - toc:
+      permalink: "#"

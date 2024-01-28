@@ -9,4 +9,3 @@ The project is based (and is a fork of) [eerimoq/pbtools][pbtools] and shares it
 
 - Options, services (gRPC) and reserved fields are ignored.
 - Public imports are not implemented.
-

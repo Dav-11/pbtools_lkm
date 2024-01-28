@@ -51,10 +51,19 @@ build:
 	sed -i "s|-Iubuntu/|-I$(KDIR)/ubuntu/|g" $(PWD)/.vscode/compile_commands.json
 
 install:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
-	depmod -A
+	@echo
+	@echo "--- installing ---"
+	@echo " [First, invoke the 'make' ]"
+	make
+	@echo
+	@echo " [Now for the 'sudo make install' ]"
+	sudo make -C $(KDIR) M=$(PWD) modules_install
+	sudo depmod
 
 clean:
+	@echo
+	@echo "--- cleaning ---"
+	@echo
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 	rm -f $(PWD)/.vscode/compile_commands.json
 	rm -f *~   # from 'indent'

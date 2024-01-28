@@ -24,32 +24,6 @@ MODULE_VERSION("0.1");
 
 static struct sock *nlsock;
 
-static void example_encode_decode()
-{
-    int size;
-    uint8_t workspace[64];
-    uint8_t encoded[16];
-    struct hello_world_foo_t *foo_p;
-
-    /* Encode. */
-    foo_p = hello_world_foo_new(&workspace[0], sizeof(workspace));
-
-    if (foo_p == NULL) {
-        return 1;
-    }
-
-    foo_p->bar = 78;
-    size = hello_world_foo_encode(foo_p, &encoded[0], sizeof(encoded));
-
-    if (size < 0) {
-        return 2;
-    }
-
-    pr_info("Successfully encoded Foo into %d bytes.\n", size);
-
-
-}
-
 static int send_string(char *message, int pid)
 {
 
@@ -69,7 +43,7 @@ static int send_string(char *message, int pid)
     // Setup the payload
     nlh = nlmsg_put(skb_tx, 0, 0, NLMSG_DONE, msgsz, 0);
     NETLINK_CB(skb_tx).dst_group = 0;  /* unicast only (cb is the * skb's control buffer), dest group 0 => unicast */
-    strncpy(nlmsg_data(nlh), reply, msgsz);
+    strncpy(nlmsg_data(nlh), message, msgsz);
 
     // Send it
     stat = nlmsg_unicast(nlsock, skb_tx, pid);
@@ -110,14 +84,16 @@ static void netlink_recv_and_reply(struct sk_buff *skb)
     foo_p = hello_world_foo_new(&workspace[0], sizeof(workspace));
 
     if (foo_p == NULL) {
-        return 1;
+        pr_warn("cannot create struct\n");
+        return;
     }
 
     foo_p->bar = 78;
     size = hello_world_foo_encode(foo_p, &encoded[0], sizeof(encoded));
 
     if (size < 0) {
-        return 2;
+        pr_warn("cannot encode struct for encode\n");
+        return;
     }
 
     sprintf(buffer, "Successfully encoded Foo into %d bytes.\n", size);
@@ -127,13 +103,14 @@ static void netlink_recv_and_reply(struct sk_buff *skb)
     foo_p = hello_world_foo_new(&workspace[0], sizeof(workspace));
 
     if (foo_p == NULL) {
-        return 3;
+        pr_warn("cannot create struct for decode\n");
+        return;
     }
 
     size = hello_world_foo_decode(foo_p, &encoded[0], size);
-
     if (size < 0) {
-        return 4;
+        pr_warn("cannot decode struct\n");
+        return;
     }
 
     sprintf(buffer, "Successfully decoded %d bytes into Foo.\n", size);

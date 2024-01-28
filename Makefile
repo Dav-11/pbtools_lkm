@@ -9,6 +9,7 @@ build:
 test:
 	$(MAKE) clean
 	go run cmd/init/init.go init test_gen
+	$(MAKE) -C test_gen generate
 
 example:
 	go run cmd/init/init.go init examples/new_example
@@ -19,3 +20,8 @@ clean:
 	rm -rf 	lib64
 	rm -rf 	include
 	rm -f 	pyvenv.cfg
+
+.PHONY: docs
+docs:
+	docker build -t Dav-11/pbtools_lkm:local -f docs/.docker/Dockerfile .
+	docker run --rm --name pbtools-lkm-docs -p 9090:80 Dav-11/pbtools_lkm:local
