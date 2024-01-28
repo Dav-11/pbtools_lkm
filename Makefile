@@ -12,7 +12,9 @@ test:
 	$(MAKE) -C test_gen generate
 
 example:
-	go run cmd/init/init.go init examples/new_example
+	mkdir -p examples/new_example/.files
+	mkdir -p examples/new_example/user_space
+	go run cmd/init/init.go init examples/new_example/module
 
 clean:
 	rm -rf 	test_gen

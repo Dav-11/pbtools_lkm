@@ -1,7 +1,0 @@
-[package]
-name = "oneof"
-version = "0.1.0"
-authors = ["Erik Moqvist <erik.moqvist@gmail.com>"]
-
-[dependencies]
-pbtools = {"path" = "../../../../mys/package-pbtools"}

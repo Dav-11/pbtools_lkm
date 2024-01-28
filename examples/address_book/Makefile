@@ -1,19 +1,35 @@
 all:
-	gcc \
-	    -O2 \
-	    -Wall \
-	    -Wno-gnu-alignof-expression \
-	    -I ../../lib/include \
-	    -I generated \
-	    generated/*.c \
-	    ../../lib/src/pbtools.c \
-	    main.c \
-	    -o main
-	./main
+	@echo
+	@echo "--- regen from proto ---"
+	@echo
+	$(MAKE) -C module generate
+	@echo
+	@echo "--- install LKM ---"
+	@echo
+	$(MAKE) -C module install
+	@echo
+	@echo "--- Load LKM ---"
+	@echo
+	$(MAKE) -C module load
+	@echo
+	@echo "--- Build client app ---"
+	@echo
+	$(MAKE) -C user_space
+
+clean:
+	@echo
+	@echo "--- clean ---"
+	@echo
+	$(MAKE) -C module clean
+	@echo
+	@echo "--- unload ---"
+	@echo
+	$(MAKE) -C module unload
 
 generate:
-	rm -rf generated
-	mkdir -p generated
-	cd generated && \
-	    env PYTHONPATH=../../.. \
-		python3 -m pbtools generate_c_source ../address_book.proto
+	rm -rf module
+	go run ../../cmd/init/init.go init module
+	cp .files/address_book.proto module/proto/address_book.proto
+	cp .files/main.c module/main.c
+
+

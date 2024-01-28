@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-message Coordinates {
-    repeated int32 xs = 1;
-    repeated int32 ys = 2;
-}
