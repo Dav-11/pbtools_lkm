@@ -13,5 +13,6 @@ test:
 clean:
 	rm -rf 	test_gen
 	rm -rf 	lib
+	rm -rf 	lib64
 	rm -rf 	include
 	rm -f 	pyvenv.cfg

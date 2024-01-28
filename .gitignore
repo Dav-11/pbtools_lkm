@@ -21,6 +21,7 @@ bin/
 # pyenv
 include
 lib
+lib64
 pyvenv.cfg
 
 
