@@ -8,13 +8,13 @@ build:
 
 test:
 	$(MAKE) clean
-	go run cmd/init/init.go init test_gen
+	go run cmd/command/main.go init test_gen
 	$(MAKE) -C test_gen generate
 
 example:
 	mkdir -p examples/new_example/.files
 	mkdir -p examples/new_example/user_space
-	go run cmd/init/init.go init examples/new_example/module
+	go run cmd/command/main.go init examples/new_example/module
 
 clean:
 	rm -rf 	test_gen
