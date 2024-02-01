@@ -9,6 +9,7 @@ build:
 test:
 	$(MAKE) clean
 	go run cmd/command/main.go init test_gen
+	$(MAKE) -C test_gen requirements
 	$(MAKE) -C test_gen generate
 
 example:
@@ -22,6 +23,7 @@ clean:
 	rm -rf 	lib64
 	rm -rf 	include
 	rm -f 	pyvenv.cfg
+	rm -rf 	bin
 
 .PHONY: docs
 docs:
