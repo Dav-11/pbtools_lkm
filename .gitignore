@@ -1,3 +1,10 @@
+#macOS
+.DS_Store
+
+# IDEs
+**/.idea
+**/.vscode
+
 # C extensions
 *.so
 *.o
@@ -7,16 +14,13 @@ a.out*
 *~
 *.swp
 *.swo
-**/.idea
-**/.vscode
-
-#macOS
-.DS_Store
 
 # test
 test_gen
 pbtools_lkm
 bin/
+
+!**/*.go
 
 # pyenv
 include
@@ -28,8 +32,6 @@ pyvenv.cfg
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-
-
 
 # Distribution / packaging
 .Python
