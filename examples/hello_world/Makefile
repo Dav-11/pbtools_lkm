@@ -35,7 +35,9 @@ generate:
 	go run ../../cmd/command/main.go init module
 	rm -rf module/proto/*
 	rm -f module/main.c
+	rm -f module/Makefile
 	cp .files/address_book.proto module/proto/address_book.proto
 	cp .files/main.c module/main.c
+	cp .files/Makefile module/Makefile
 
 
