@@ -12,11 +12,6 @@ test:
 	$(MAKE) -C test_gen requirements
 	$(MAKE) -C test_gen generate
 
-.PHONY: examples
-examples:
-	$(MAKE) -C examples generate
-	$(MAKE) -C examples run
-
 clean:
 	rm -rf 	test_gen
 	rm -rf 	lib
