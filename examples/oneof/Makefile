@@ -1,0 +1,43 @@
+all:
+	@echo
+	@echo "--- regen from proto ---"
+	@echo
+	$(MAKE) -C module requirements
+	@echo
+	@echo "--- regen from proto ---"
+	@echo
+	$(MAKE) -C module generate
+	@echo
+	@echo "--- install LKM ---"
+	@echo
+	$(MAKE) -C module install
+	@echo
+	@echo "--- Load LKM ---"
+	@echo
+	$(MAKE) -C module load
+	@echo
+	@echo "--- Build client app ---"
+	@echo
+	$(MAKE) -C user_space
+
+clean:
+	@echo
+	@echo "--- clean ---"
+	@echo
+	$(MAKE) -C module clean
+	@echo
+	@echo "--- unload ---"
+	@echo
+	$(MAKE) -C module unload
+
+generate:
+	rm -rf module
+	go run ../../cmd/command/main.go init module
+	rm -rf module/proto/*
+	rm -f module/main.c
+	rm -f module/Makefile
+	cp .files/oneof.proto module/proto/oneof.proto
+	cp .files/main.c module/main.c
+	cp .files/Makefile module/Makefile
+
+
