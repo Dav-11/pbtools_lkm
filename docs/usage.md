@@ -5,14 +5,17 @@
 - python3
 - python3-env
 - python3-pip
+- make
+- gcc
+- linux os (x LKM)
 
 ### Build executable
-```shell
+```
 make
 ```
 
 ## Create folder
-```shell
+```
 bin/pbtools_lkm init <folder_name>
 cd <folder_name>
 ```
@@ -21,7 +24,7 @@ cd <folder_name>
 Delete `<folder_name>/proto/hello_world.proto` and write new proto files
 
 ## Compile
-```shell
+```
 cd <folder_name>
 make requirements
 make generate
@@ -47,8 +50,18 @@ make install
 make load
 ```
 
+### Common errors
+
+#### Skipping BTF generation xxx. due to unavailability of vmlinux
+Fix on Ubuntu ([source](https://askubuntu.com/questions/1348250/skipping-btf-generation-xxx-due-to-unavailability-of-vmlinux-on-ubuntu-21-04)):
+
+```
+apt install dwarves
+cp /sys/kernel/btf/vmlinux /usr/lib/modules/`uname -r`/build/
+```
+
 ## Unload and clean
-```shell
+```
 make unload
 make clean
 ```
