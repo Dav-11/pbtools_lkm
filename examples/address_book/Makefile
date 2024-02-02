@@ -2,6 +2,10 @@ all:
 	@echo
 	@echo "--- regen from proto ---"
 	@echo
+	$(MAKE) -C module requirements
+	@echo
+	@echo "--- regen from proto ---"
+	@echo
 	$(MAKE) -C module generate
 	@echo
 	@echo "--- install LKM ---"
