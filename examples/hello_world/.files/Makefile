@@ -28,7 +28,7 @@ obj-m 			+= hello_world.o
 # main.c and pbtools.c ... it's this makefile module magic thing..
 # see online resources for more information
 # YOU DON'T need this IF you have *.c-file with the name of the final kernel module :)
-pbtools_lkm-y 	:= \
+hello_world-y 	:= \
 	main.o \
 	pbtools.o \
 	generated/hello_world.o
@@ -69,10 +69,10 @@ clean:
 	rm -f *~   # from 'indent'
 
 load:
-	sudo insmod $(PWD)/pbtools_lkm.ko
+	sudo insmod $(PWD)/hello_world.ko
 
 unload:
-	sudo rmmod pbtools_lkm
+	sudo rmmod hello_world
 
 requirements:
 	python3 -m venv ./venv
@@ -152,7 +152,7 @@ sa_cppcheck:
 	cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
 
 # Packaging; just tar.xz as of now
-PKG_NAME := pbtools_lkm
+PKG_NAME := hello_world
 tarxz-pkg:
 	rm -f ../${PKG_NAME}.tar.xz 2>/dev/null
 	$(MAKE) clean

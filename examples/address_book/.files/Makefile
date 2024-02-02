@@ -28,7 +28,7 @@ obj-m 			+= address_book.o
 # main.c and pbtools.c ... it's this makefile module magic thing..
 # see online resources for more information
 # YOU DON'T need this IF you have *.c-file with the name of the final kernel module :)
-pbtools_lkm-y 	:= \
+address_book-y 	:= \
 	main.o \
 	pbtools.o \
 	generated/address_book.o
@@ -69,10 +69,10 @@ clean:
 	rm -f *~   # from 'indent'
 
 load:
-	sudo insmod $(PWD)/pbtools_lkm.ko
+	sudo insmod $(PWD)/address_book.ko
 
 unload:
-	sudo rmmod pbtools_lkm
+	sudo rmmod address_book
 
 requirements:
 	python3 -m venv ./venv
@@ -152,7 +152,7 @@ sa_cppcheck:
 	cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
 
 # Packaging; just tar.xz as of now
-PKG_NAME := pbtools_lkm
+PKG_NAME := address_book
 tarxz-pkg:
 	rm -f ../${PKG_NAME}.tar.xz 2>/dev/null
 	$(MAKE) clean
