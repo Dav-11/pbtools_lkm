@@ -36,7 +36,7 @@ generate:
 	rm -rf module/proto/*
 	rm -f module/main.c
 	rm -f module/Makefile
-	cp .files/address_book.proto module/proto/address_book.proto
+	cp .files/hello_world.proto module/proto/hello_world.proto
 	cp .files/main.c module/main.c
 	cp .files/Makefile module/Makefile
 
