@@ -75,16 +75,13 @@ unload:
 	sudo rmmod pbtools_lkm
 
 requirements:
-	python3 -m venv ../
-	env PYTHONPATH=../ \
-		pip3 install textparser
+	python3 -m venv ./venv
+	PYTHONPATH=$(CURDIR) venv/bin/pip3 install textparser
 
 generate:
 	rm -rf generated
 	mkdir -p generated
-	cd generated && \
-	    env PYTHONPATH=../ \
-		python3 -m pbtools generate_c_source ../proto/address_book.proto
+	cd generated && export PYTHONPATH=$(CURDIR) && ../venv/bin/python3 -m pbtools generate_c_source ../proto/address_book.proto
 
 INDENT := indent
 
