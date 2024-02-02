@@ -1,6 +1,8 @@
 run:
 	$(MAKE) -C address_book
+	$(MAKE) -C address_book clean
 	$(MAKE) -C hello_world
+	$(MAKE) -C hello_world clean
 
 new:
 	mkdir -p new_example/.files
