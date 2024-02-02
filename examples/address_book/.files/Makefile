@@ -21,7 +21,7 @@ endif
 
 PWD   			:= $(shell pwd)
 EXTRA_CFLAGS   	+= -DDEBUG
-obj-m 			+= pbtools_lkm.o
+obj-m 			+= address_book.o
 
 # we have no file "pbtools_lkm.c" in this example
 # therefore we specify: module pbtools_lkm.ko relies on
