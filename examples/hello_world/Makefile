@@ -28,7 +28,7 @@ clean:
 
 generate:
 	rm -rf module
-	go run ../../cmd/init/init.go init module
+	go run ../../cmd/command/main.go init module
 	cp .files/address_book.proto module/proto/address_book.proto
 	cp .files/main.c module/main.c
 

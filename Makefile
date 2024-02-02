@@ -12,10 +12,9 @@ test:
 	$(MAKE) -C test_gen requirements
 	$(MAKE) -C test_gen generate
 
-example:
-	mkdir -p examples/new_example/.files
-	mkdir -p examples/new_example/user_space
-	go run cmd/command/main.go init examples/new_example/module
+examples:
+	$(MAKE) -C examples generate
+	$(MAKE) -C examples run
 
 clean:
 	rm -rf 	test_gen
