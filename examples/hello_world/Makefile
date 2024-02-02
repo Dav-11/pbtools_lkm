@@ -33,6 +33,8 @@ clean:
 generate:
 	rm -rf module
 	go run ../../cmd/command/main.go init module
+	rm -rf module/proto/*
+	rm -f module/main.c
 	cp .files/address_book.proto module/proto/address_book.proto
 	cp .files/main.c module/main.c
 
