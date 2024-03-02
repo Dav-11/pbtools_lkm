@@ -18,13 +18,12 @@ MODULE_VERSION("0.1");
 #define PORT    4445
 
 // Define your struct
-static struct encoded_data
-{
+typedef struct {
     int size;
     uint8_t encoded[128];
-};
+} encoded_data;
 
-static void decode(struct encoded_data *data)
+static void decode(encoded_data *data)
 {
     uint8_t workspace[1024];
 
@@ -72,6 +71,8 @@ static int __init pbtools_lkm_init(void)
         return ret;
     }
 
+    printk(KERN_INFO "Created socket\n");
+
     // Set up the address structure
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
@@ -85,6 +86,7 @@ static int __init pbtools_lkm_init(void)
         sock_release(sock);
         return ret;
     }
+    printk(KERN_INFO "Bound socket\n");
 
     // Listen on the socket
     ret = sock->ops->listen(sock, 10); // Example backlog of 10 connections
@@ -116,6 +118,7 @@ static int __init pbtools_lkm_init(void)
 
     vec.iov_base = buf;
     vec.iov_len = sizeof(buf);
+    
     ret = kernel_recvmsg(new_sock, &msg, &vec, 1, sizeof(buf), 0);
     if (ret < 0) {
         printk(KERN_ERR "Failed to receive data\n");

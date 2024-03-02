@@ -3,23 +3,24 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <assert.h>
 
 #include "generated/address_book.h"
 
 #define PORT 4445
 
 // Define your struct
-struct encoded_data {
+typedef struct {
     int size;
     uint8_t encoded[128];
-};
+} encoded_data;
 
 encoded_data *new_address_book() {
 
     uint8_t workspace[1024];
 
-	struct encoded_data *enc = (struct encoded_data*)malloc(sizeof(struct encoded_data));
-	memset(enc, 0, sizeof(struct encoded_data));
+	encoded_data *enc = (encoded_data*)malloc(sizeof(encoded_data));
+	memset(enc, 0, sizeof(encoded_data));
 
 	struct address_book_address_book_t *address_book_p;
     struct address_book_person_t *person_p;
@@ -40,19 +41,19 @@ encoded_data *new_address_book() {
     /* Home. */
     phone_number_p = &person_p->phones.items_p[0];
     phone_number_p->number_p = "+46701232345";
-    phone_number_p->type = address_book_person_phone_type_home_e;
+    phone_number_p->type = address_book_person_home_e;
 
     /* Work. */
     phone_number_p = &person_p->phones.items_p[1];
     phone_number_p->number_p = "+46999999999";
-    phone_number_p->type = address_book_person_phone_type_work_e;
+    phone_number_p->type = address_book_person_work_e;
 
     /* Encode the message. */
-    enc->size = address_book_address_book_encode(address_book_p, enc->encoded[0], sizeof(enc->encoded));
+    enc->size = address_book_address_book_encode(address_book_p, enc->encoded, sizeof(enc->encoded));
 
 	assert(enc->size == 75);
 
-	return enc
+	return enc;
 }
 
 int main() {
@@ -79,11 +80,11 @@ int main() {
     }
 
     // Prepare struct to send
-    struct encoded_data *dataToSend = new_address_book();
+    encoded_data *dataToSend = new_address_book();
 
 	// string
 	char example_string[50];
-	example_string[] = "Esempio!"
+    strcpy(example_string, "Esempio!");
 
     // Send struct
     if (send(sockfd, example_string, sizeof(example_string), 0) == -1) {
