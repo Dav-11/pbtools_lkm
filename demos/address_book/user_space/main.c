@@ -61,13 +61,7 @@ int main() {
     struct sockaddr_in serveraddr;
 
     // create msg
-    encoded_data msg;
-    memset(&msg, 0, sizeof(msg));
-
-    char str[] = "This is a test message";
-
-    memcpy(msg.encoded, str, strlen(str) + 1);
-    msg.size = strlen(str) + 1;
+    encoded_data *msg = new_address_book();
 
     // Create a UDP socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -83,7 +77,7 @@ int main() {
     memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero));
 
     // Send the message
-    if (sendto(sockfd, &msg, sizeof(msg), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
+    if (sendto(sockfd, msg, sizeof(encoded_data), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
         perror("sendto");
         close(sockfd);
         exit(1);

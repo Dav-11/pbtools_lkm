@@ -136,8 +136,10 @@ static int __init pbtools_lkm_init(void)
         goto out_release;
     }
 
+    pr_info("Received data, decoding... \n");
+
     // Process received data as needed
-    pr_info("Received data: %s\n", (char *)message.encoded);
+    decode(&message);
 
 out_release:
 
@@ -149,9 +151,6 @@ out:
 
 static void __exit pbtools_lkm_exit(void)
 {
-    /* cleanup listening socket */
-	sock_release(sock);
-
     pr_info("removed\n");
 }
 
