@@ -57,10 +57,14 @@ static void decode(message *data)
     WARN_ON(size < 0);
     WARN_ON(address_book_p->people.length != 1);
 
+    pr_info("people.length: %d", address_book_p->people.length);
+
     /* Check the decoded person. */
     person_p = &address_book_p->people.items_p[0];
     WARN_ON(strcmp(person_p->name_p, "Kalle Kula") != 0);
     WARN_ON(person_p->id != 56);
+    pr_info("person_p->id: %d", person_p->id);
+
     WARN_ON(strcmp(person_p->email_p, "kalle.kula@foobar.com") != 0);
     WARN_ON(person_p->phones.length != 2);
 
@@ -68,6 +72,7 @@ static void decode(message *data)
     phone_number_p = &person_p->phones.items_p[0];
     WARN_ON(strcmp(phone_number_p->number_p, "+46701232345") != 0);
     WARN_ON(phone_number_p->type != address_book_person_home_e);
+    pr_info("phone_number_p->number_p: %s", phone_number_p->number_p);
 
     /* Check work phone number. */
     phone_number_p = &person_p->phones.items_p[1];
