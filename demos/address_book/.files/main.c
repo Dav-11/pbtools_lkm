@@ -17,7 +17,7 @@ MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define MY_TCP_PORT         4445
+#define MY_UDP_PORT         60001
 #define LISTEN_BACKLOG		5       // queue length for port
 
 
@@ -32,7 +32,7 @@ MODULE_VERSION("0.1");
 
 
 static struct socket *sock;	/* listening (server) socket */
-static struct socket *new_sock;	/* communication socket */
+//static struct socket *new_sock;	/* communication socket */
 
 
 // message struct to be sent
@@ -115,142 +115,75 @@ static int __init pbtools_lkm_init(void)
 	/* address to bind on */
 	struct sockaddr_in addr = {
 		.sin_family	= AF_INET,
-		.sin_port	= htons(MY_TCP_PORT),           // translate into network bits representation (short)
-		.sin_addr	= { htonl(INADDR_LOOPBACK) }    // translate into network bits representation (long) 127.0.0.1
+		.sin_port	= htons(MY_UDP_PORT),
+		.sin_addr	= { htonl(INADDR_LOOPBACK) }
 	};
-
-    /* address of peer */
-	struct sockaddr_in raddr;
 
     // init vars
     sock = NULL;
-	new_sock = NULL;
+	//new_sock = NULL;
 	err = 0;
 
     pr_info("Loaded module");
 
     // create listening socket
-	err = sock_create_kern(&init_net, PF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
+	err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
 	if (err < 0) {
 		
-        pr_err("Could not create socket");
+        pr_err("Could not create socket: %d", err);
 		goto out;
 	}
 
     // reset err
     err = 0;
 
-    // bind socket to loopback on port MY_TCP_PORT
-	err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
+    // bind socket to loopback on port
+    err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
 	if (err < 0) {
 	
 		/* handle error */
-		pr_err("Could not bind socket");
+		pr_err("Could not bind socket: %d", err);
 		goto out;
 	}
 
     // reset err
     err = 0;
 
-    // start listening
-    // backlog is the size of the queue for the socket, when full system rejects pkg
-	// https://tangentsoft.com/wskfaq/advanced.html#backlog
-	err = sock->ops->listen (sock, LISTEN_BACKLOG);
-	if (err < 0) {
-	
-		/* handle error */
-		pr_err("Could not listen from socket");
-		goto out;
-	}
-
-    // reset err
-    err = 0;
-
-    // create new socket for the accepted connection
-    err = sock_create_lite(PF_PACKET, sock->type, IPPROTO_TCP, &new_sock);
-	if (err) {
-
-		pr_err("Can't allocate socket x accept\n");
-		goto out_release;
-	}
-
-    // copy sock_ops struct to new socket
-	new_sock->ops = sock->ops;
-
-    err = 0;
-
-    // accept a connection
-    err = sock->ops->accept(sock, new_sock, 0, true);
-	if (err) {
-
-		pr_err("Could not accept connection from socket");
-		goto out_release;
-	}
-
-
-    //
-    // Now new_sock is the accepted connection
-    //
-
-    // Read data from the socket
-    char buf[1024];
-
-    struct kvec iov;
+    // data struct
     struct msghdr msg;
-    int flags = MSG_WAITALL; // Or other flags as needed
+	struct kvec iov;
 
-    memset(&iov, 0, sizeof(iov));
-    memset(&msg, 0, sizeof(msg));
+    memset(&msg, 0, sizeof(struct msghdr));
+    memset(&iov, 0, sizeof(struct kvec));
 
-    // init msghdr
-    msg.msg_name = (struct sockaddr *) &raddr;
-	msg.msg_namelen = sizeof(raddr);
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
 
-    // init kvec
-    iov.iov_base = buf;
-    iov.iov_len = sizeof(buf);
+    iov.iov_base = buffer; // Allocate buffer for receiving data
+    iov.iov_len = sizeof(buffer);
 
-    // Call kernel_recvmsg() to receive data
-    err = kernel_recvmsg(sock, &msg, &iov, 1, iov.iov_len, flags);
-
-    if (err > 0) {
-
-        // Process received data
-        // Do something with buffer
-        pr_info("Received: %s", buf);
-
-    } else if (err == 0) {
-
-        // Connection closed
-        pr_err("Connection Closed! err: %d", err);
-        goto out_release_new_sock;
-
-    } else {
-
-        // Error handling
-        pr_err("Error in rcvmsg! err: %d", err);
-        goto out_release_new_sock;
+    err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
+    if (err < 0) {
+        pr_err("Failed to receive UDP data: %d\n", err);
+        goto out_release;
     }
 
-    pr_info("done");
-
-    return 0;
-
-out_release_new_sock:
-
-	/* cleanup socket for accepted connection */
-	sock_release(new_sock);
+    // Process received data as needed
+    pr_info("Received data: %s\n", (char *)iov.iov_base);
 
 out_release:
 
 	/* cleanup listening socket */
 	sock_release(sock);
 out:
-	return err;
+	return 0;
 }
 
 static void __exit pbtools_lkm_exit(void)
 {
+    /* cleanup listening socket */
+	sock_release(sock);
+    
     pr_info("removed\n");
 }
 

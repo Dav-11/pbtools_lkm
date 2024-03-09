@@ -7,7 +7,7 @@
 
 #include "generated/address_book.h"
 
-#define PORT 4445
+#define PORT 60001
 
 // Define your struct
 typedef struct {
@@ -57,48 +57,34 @@ encoded_data *new_address_book() {
 }
 
 int main() {
+    int sockfd;
+    struct sockaddr_in serveraddr;
+    char message[] = "This is a test message";
+    int message_len = strlen(message) + 1; // Include null terminator
 
-    // Create socket
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    // Create a UDP socket
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == -1) {
         perror("socket");
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
-    // Server address
-    struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+    // Set up server address structure
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // Localhost address
+    serveraddr.sin_port = htons(PORT);
+    memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero));
 
-    // Connect to server
-    int err = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
-    if ( err == -1) {
-        perror("connect");
+    // Send the message
+    if (sendto(sockfd, message, message_len, 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
+        perror("sendto");
         close(sockfd);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
-    // Prepare struct to send
-    encoded_data *dataToSend = new_address_book();
+    printf("Message sent to localhost on port %d\n", PORT);
 
-	// string
-	char example_string[50];
-    strcpy(example_string, "Esempio!");
-
-    // Send struct
-    err = send(sockfd, example_string, sizeof(example_string), 0);
-    if ( err < 0) {
-        perror("send");
-        close(sockfd);
-		free(dataToSend);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Data sent successfully\n");
-
-    // Close socket
+    // Close the socket (not required for sending, but good practice)
     close(sockfd);
 
     return 0;
