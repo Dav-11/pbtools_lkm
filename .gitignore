@@ -84,11 +84,7 @@ docs/_build/
 # PyBuilder
 target/
 
-
-
 # IntelliJ IDEA
-
-
 main
 *_pb2.py
 /*.[hc]
@@ -98,7 +94,6 @@ tests/crash-*
 tests/main_fuzzer*
 /address_book
 report.json
-generated
 lib/libpbtools.a
 Cargo.lock
 /*.rs

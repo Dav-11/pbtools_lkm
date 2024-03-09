@@ -24,7 +24,9 @@ make -C user_space
 ```bash
 make -C module unload
 ```
-5. You should see logs using dmesg
+> For some reason if you do not do this some logs will not appear
+
+6. You should see logs using dmesg
 ```bash
 root@ubuntu:~# dmesg
 [  326.742819] address_book:pbtools_lkm_init(): Loaded module

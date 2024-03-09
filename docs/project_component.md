@@ -1,4 +1,4 @@
-# Project Structure
+# Project Component
 
 The project is composed by two main pieces:
 - Folder Initializer

@@ -27,20 +27,8 @@ var (
 	//go:embed module_template/.gitignore
 	gitignore string
 
-	//go:embed module_template/CMakeLists.txt
-	cMakeLists string
-
 	//go:embed module_template/proto/hello_world.proto
 	helloWorldProto string
-
-	//go:embed module_template/cmake/FindKernelHeaders.cmake
-	findKernelHeaders string
-
-	//go:embed module_template/.vscode_t/c_cpp_properties.json
-	cCppProperties string
-
-	//go:embed module_template/.vscode_t/module_hello.code-workspace
-	moduleHello string
 
 	//
 	// python module
@@ -171,10 +159,6 @@ func Init(cmd *cobra.Command, args []string) {
 				fileName: ".gitignore",
 				content:  gitignore,
 			},
-			{
-				fileName: "CMakeLists.txt",
-				content:  cMakeLists,
-			},
 		},
 		subFolder: []Folder{
 			{
@@ -183,28 +167,6 @@ func Init(cmd *cobra.Command, args []string) {
 					{
 						fileName: "hello_world.proto",
 						content:  helloWorldProto,
-					},
-				},
-			},
-			{
-				name: "cmake",
-				files: []File{
-					{
-						fileName: "FindKernelHeaders.cmake",
-						content:  findKernelHeaders,
-					},
-				},
-			},
-			{
-				name: ".vscode",
-				files: []File{
-					{
-						fileName: "c_cpp_properties.json",
-						content:  cCppProperties,
-					},
-					{
-						fileName: "module_hello.code-workspace",
-						content:  moduleHello,
 					},
 				},
 			},
