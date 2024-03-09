@@ -73,7 +73,8 @@ int main() {
     inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
 
     // Connect to server
-    if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+    int err = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    if ( err == -1) {
         perror("connect");
         close(sockfd);
         exit(EXIT_FAILURE);
@@ -87,7 +88,8 @@ int main() {
     strcpy(example_string, "Esempio!");
 
     // Send struct
-    if (send(sockfd, example_string, sizeof(example_string), 0) == -1) {
+    err = send(sockfd, example_string, sizeof(example_string), 0);
+    if ( err < 0) {
         perror("send");
         close(sockfd);
 		free(dataToSend);
