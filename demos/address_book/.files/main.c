@@ -2,11 +2,13 @@
 
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
-#include <linux/init.h>
-#include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/init.h>
 #include <linux/net.h>
-#include <linux/tcp.h>
+#include <linux/in.h>
+#include <linux/fs.h>
+#include <net/sock.h>
 
 #include "generated/address_book.h"
 
@@ -15,15 +17,31 @@ MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define PORT    4445
+#define MY_TCP_PORT         4445
+#define LISTEN_BACKLOG		5       // queue length for port
 
-// Define your struct
+
+// MACRO to print peer address in connection
+#define print_sock_address(addr)						\
+	do {												\
+		printk(LOG_LEVEL "connection established to "	\
+			"%pI4:%d\n",	 							\
+			&addr.sin_addr.s_addr,						\
+			ntohs(addr.sin_port));						\
+	} while (0)
+
+
+static struct socket *sock;	/* listening (server) socket */
+static struct socket *new_sock;	/* communication socket */
+
+
+// message struct to be sent
 typedef struct {
     int size;
     uint8_t encoded[128];
-} encoded_data;
+} message;
 
-static void decode(encoded_data *data)
+static void decode(message *data)
 {
     uint8_t workspace[1024];
 
@@ -57,52 +75,118 @@ static void decode(encoded_data *data)
     WARN_ON(phone_number_p->type != address_book_person_work_e);
 }
 
+// static void process_received_data(struct msghdr *msg) {
+//     struct kvec *iov = msg.msg_iov;
+//     int iov_len = msg.msg_iovlen;
+
+//     // Iterate through the iovec array
+//     for (int i = 0; i < iov_len; i++) {
+        
+//         // Check if the current buffer contains at least the size of message struct
+//         if (iov[i].iov_len >= sizeof(message)) {
+            
+//             // Extract the message struct from the buffer
+//             message *msg_ptr = (message *)iov[i].iov_base;
+
+//             // Access fields of the message struct
+//             int size = msg_ptr->size;
+//             uint8_t *encoded_data = msg_ptr->encoded;
+
+//             // Process the received message
+//             // Example: Print the size and contents of the encoded data
+//             printk(KERN_INFO "Received message size: %d\n", size);
+//             printk(KERN_INFO "Encoded data: ");
+//             for (int j = 0; j < size; j++) {
+//                 printk(KERN_CONT "%02x ", encoded_data[j]);
+//             }
+//             printk(KERN_CONT "\n");
+
+//             // You can break here if you only want to process the first message found
+//             break;
+//         }
+//     }
+// }
+
 static int __init pbtools_lkm_init(void)
 {
 
-    struct socket *sock, *new_sock;
-    struct sockaddr_in sin;
-    int ret;
+    int err;
 
-    // Create socket
-    ret = sock_create(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to create socket\n");
-        return ret;
-    }
+	/* address to bind on */
+	struct sockaddr_in addr = {
+		.sin_family	= AF_INET,
+		.sin_port	= htons(MY_TCP_PORT),           // translate into network bits representation (short)
+		.sin_addr	= { htonl(INADDR_LOOPBACK) }    // translate into network bits representation (long) 127.0.0.1
+	};
 
-    printk(KERN_INFO "Created socket\n");
+    /* address of peer */
+	struct sockaddr_in raddr;
 
-    // Set up the address structure
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // Example: Bind to localhost
-    sin.sin_port = htons(PORT); // Example port
+    // init vars
+    sock = NULL;
+	new_sock = NULL;
+	err = 0;
 
-    // Bind the socket
-    ret = sock->ops->bind(sock, (struct sockaddr *)&sin, sizeof(sin));
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to bind socket\n");
-        sock_release(sock);
-        return ret;
-    }
-    printk(KERN_INFO "Bound socket\n");
+    pr_info("Loaded module");
 
-    // Listen on the socket
-    ret = sock->ops->listen(sock, 10); // Example backlog of 10 connections
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to listen on socket\n");
-        sock_release(sock);
-        return ret;
-    }
+    // create listening socket
+	err = sock_create_kern(&init_net, PF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
+	if (err < 0) {
+		
+        pr_err("Could not create socket");
+		goto out;
+	}
 
-    // Accept incoming connections
-    ret = sock->ops->accept(sock, new_sock, 0, true);
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to accept connection\n");
-        sock_release(sock);
-        return ret;
-    }
+    // reset err
+    err = 0;
+
+    // bind socket to loopback on port MY_TCP_PORT
+	err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
+	if (err < 0) {
+	
+		/* handle error */
+		pr_err("Could not bind socket");
+		goto out;
+	}
+
+    // reset err
+    err = 0;
+
+    // start listening
+    // backlog is the size of the queue for the socket, when full system rejects pkg
+	// https://tangentsoft.com/wskfaq/advanced.html#backlog
+	err = sock->ops->listen (sock, LISTEN_BACKLOG);
+	if (err < 0) {
+	
+		/* handle error */
+		pr_err("Could not listen from socket");
+		goto out;
+	}
+
+    // reset err
+    err = 0;
+
+    // create new socket for the accepted connection
+    err = sock_create_lite(PF_PACKET, sock->type, IPPROTO_TCP, &new_sock);
+	if (err) {
+
+		pr_err("Can't allocate socket x accept\n");
+		goto out_release;
+	}
+
+    // copy sock_ops struct to new socket
+	new_sock->ops = sock->ops;
+
+    err = 0;
+
+    // accept a connection
+    err = sock->ops->accept(sock, new_sock, 0, true);
+	if (err) {
+
+		pr_err("Could not accept connection from socket");
+		goto out_release;
+	}
+
 
     //
     // Now new_sock is the accepted connection
@@ -111,32 +195,58 @@ static int __init pbtools_lkm_init(void)
     // Read data from the socket
     char buf[1024];
 
-    struct kvec vec;
+    struct kvec iov;
     struct msghdr msg;
-    memset(&vec, 0, sizeof(vec));
+    int flags = MSG_WAITALL; // Or other flags as needed
+
+    memset(&iov, 0, sizeof(iov));
     memset(&msg, 0, sizeof(msg));
 
-    vec.iov_base = buf;
-    vec.iov_len = sizeof(buf);
-    
-    ret = kernel_recvmsg(new_sock, &msg, &vec, 1, sizeof(buf), 0);
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to receive data\n");
-        sock_release(new_sock);
-        sock_release(sock);
-        return ret;
+    // init msghdr
+    msg.msg_name = (struct sockaddr *) &raddr;
+	msg.msg_namelen = sizeof(raddr);
+
+    // init kvec
+    iov.iov_base = buf;
+    iov.iov_len = sizeof(buf);
+
+    // Call kernel_recvmsg() to receive data
+    err = kernel_recvmsg(sock, &msg, &iov, 1, iov.iov_len, flags);
+
+    if (err > 0) {
+
+        // Process received data
+        // Do something with buffer
+        pr_info("Received: %s", buf);
+
+    } else if (err == 0) {
+
+        // Connection closed
+        pr_err("Connection Closed! err: %d", err);
+        goto out_release_new_sock;
+
+    } else {
+
+        // Error handling
+        pr_err("Error in rcvmsg! err: %d", err);
+        goto out_release_new_sock;
     }
 
-    // Process received data
-    printk(KERN_INFO "Received data: %s\n", buf);
+    pr_info("done");
 
-    // Cleanup
-    sock_release(new_sock);
-    sock_release(sock);
+    return 0;
 
-    pr_info("inserted\n");
+out_release_new_sock:
 
-    return 0;		/* success */
+	/* cleanup socket for accepted connection */
+	sock_release(new_sock);
+
+out_release:
+
+	/* cleanup listening socket */
+	sock_release(sock);
+out:
+	return err;
 }
 
 static void __exit pbtools_lkm_exit(void)
