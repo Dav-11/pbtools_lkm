@@ -75,42 +75,11 @@ static void decode(message *data)
     WARN_ON(phone_number_p->type != address_book_person_work_e);
 }
 
-// static void process_received_data(struct msghdr *msg) {
-//     struct kvec *iov = msg.msg_iov;
-//     int iov_len = msg.msg_iovlen;
-
-//     // Iterate through the iovec array
-//     for (int i = 0; i < iov_len; i++) {
-        
-//         // Check if the current buffer contains at least the size of message struct
-//         if (iov[i].iov_len >= sizeof(message)) {
-            
-//             // Extract the message struct from the buffer
-//             message *msg_ptr = (message *)iov[i].iov_base;
-
-//             // Access fields of the message struct
-//             int size = msg_ptr->size;
-//             uint8_t *encoded_data = msg_ptr->encoded;
-
-//             // Process the received message
-//             // Example: Print the size and contents of the encoded data
-//             printk(KERN_INFO "Received message size: %d\n", size);
-//             printk(KERN_INFO "Encoded data: ");
-//             for (int j = 0; j < size; j++) {
-//                 printk(KERN_CONT "%02x ", encoded_data[j]);
-//             }
-//             printk(KERN_CONT "\n");
-
-//             // You can break here if you only want to process the first message found
-//             break;
-//         }
-//     }
-// }
-
 static int __init pbtools_lkm_init(void)
 {
 
     int err;
+    message message;
 
 	/* address to bind on */
 	struct sockaddr_in addr = {
@@ -121,8 +90,9 @@ static int __init pbtools_lkm_init(void)
 
     // init vars
     sock = NULL;
-	//new_sock = NULL;
 	err = 0;
+    memset(&message, 0, sizeof(message));
+
 
     pr_info("Loaded module");
 
@@ -156,11 +126,9 @@ static int __init pbtools_lkm_init(void)
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
 
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
 
-    iov.iov_base = buffer; // Allocate buffer for receiving data
-    iov.iov_len = sizeof(buffer);
+    iov.iov_base = &message; // Allocate struct for receiving data
+    iov.iov_len = sizeof(message);
 
     err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
     if (err < 0) {
@@ -169,7 +137,7 @@ static int __init pbtools_lkm_init(void)
     }
 
     // Process received data as needed
-    pr_info("Received data: %s\n", (char *)iov.iov_base);
+    pr_info("Received data: %s\n", (char *)message.encoded);
 
 out_release:
 
@@ -183,7 +151,7 @@ static void __exit pbtools_lkm_exit(void)
 {
     /* cleanup listening socket */
 	sock_release(sock);
-    
+
     pr_info("removed\n");
 }
 

@@ -69,7 +69,7 @@ clean:
 	rm -f *~   # from 'indent'
 
 load:
-	sudo insmod $(PWD)/address_book.ko
+	sudo insmod $(PWD)/address_book.ko &
 
 unload:
 	sudo rmmod address_book
