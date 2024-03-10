@@ -1,10 +1,5 @@
 all:
-	gcc \
-	    -O2 \
-	    -Wall \
-	    -Wno-gnu-alignof-expression \
-	    main.c \
-	    -o main
+	$(MAKE) build
 	./main
 
 build:
@@ -13,4 +8,6 @@ build:
 		-Wall \
 		-Wno-gnu-alignof-expression \
 		main.c \
+		pbtools.c \
+		generated/hello_world.c \
 		-o main
