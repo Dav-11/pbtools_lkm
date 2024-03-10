@@ -9,18 +9,17 @@
 
 #define PORT 60001
 
-// Define your struct
 typedef struct {
     int size;
     uint8_t encoded[128];
-} encoded_data;
+} message;
 
-encoded_data *new_address_book() {
+message *new_address_book() {
 
     uint8_t workspace[1024];
 
-	encoded_data *enc = (encoded_data*)malloc(sizeof(encoded_data));
-	memset(enc, 0, sizeof(encoded_data));
+    message *enc = (message*)malloc(sizeof(message));
+	memset(enc, 0, sizeof(message));
 
 	struct address_book_address_book_t *address_book_p;
     struct address_book_person_t *person_p;
@@ -50,8 +49,7 @@ encoded_data *new_address_book() {
 
     /* Encode the message. */
     enc->size = address_book_address_book_encode(address_book_p, enc->encoded, sizeof(enc->encoded));
-
-	assert(enc->size == 75);
+    assert(enc->size == 75);
 
 	return enc;
 }
@@ -61,7 +59,7 @@ int main() {
     struct sockaddr_in serveraddr;
 
     // create msg
-    encoded_data *msg = new_address_book();
+    message *msg = new_address_book();
 
     // Create a UDP socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -76,8 +74,16 @@ int main() {
     serveraddr.sin_port = htons(PORT);
     memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero));
 
+    // prepend msg length
+    uint32_t network_length = htonl(msg->size);
+    if (sendto(sockfd, &network_length, sizeof(network_length), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
+        perror("sendto");
+        close(sockfd);
+        exit(1);
+    }
+
     // Send the message
-    if (sendto(sockfd, msg, sizeof(encoded_data), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
+    if (sendto(sockfd, msg->encoded, sizeof(msg->encoded), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
         perror("sendto");
         close(sockfd);
         exit(1);

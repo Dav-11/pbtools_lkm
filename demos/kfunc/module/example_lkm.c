@@ -19,12 +19,10 @@ typedef struct {
 /* Disables missing prototype warnings */
 __bpf_kfunc_start_defs();
 
-__bpf_kfunc message bpf_get_message()
+__bpf_kfunc message bpf_get_message(void)
 {
-
     message example;
     memset(&example, 0, sizeof(message));
-
 
     example.size = 8;
     strcpy(example.string, "Custom message");
