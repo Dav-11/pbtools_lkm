@@ -1,14 +1,11 @@
 package main
 
 import (
-	"C"
 	"fmt"
 	"net"
-)
-import (
-	"address_book/gen"
 	"bytes"
-	"encoding/binary"
+
+	"address_book/gen"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -48,15 +45,6 @@ func main() {
         panic(err)
     }
 
-	var buffer bytes.Buffer
-
-	// Prepend message length for easier decoding (optional)
-	dataLength := make([]byte, 4)
-	binary.BigEndian.PutUint32(dataLength, uint32(len(data)))
-
-	buffer.Write(dataLength)
-	buffer.Write(data)
-
 	// Connect to UDP server
 	address := fmt.Sprintf("127.0.0.1:%d", port)
     conn, err := net.Dial("udp", address)
@@ -64,6 +52,10 @@ func main() {
         panic(err)
     }
     defer conn.Close()
+
+	var buffer bytes.Buffer
+
+	buffer.Write(data)
 
 	// Send the encoded data
     if _, err = conn.Write(buffer.Bytes()); err != nil {

@@ -74,14 +74,6 @@ int main() {
     serveraddr.sin_port = htons(PORT);
     memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero));
 
-    // prepend msg length
-    uint32_t network_length = htonl(msg->size);
-    if (sendto(sockfd, &network_length, sizeof(network_length), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
-        perror("sendto");
-        close(sockfd);
-        exit(1);
-    }
-
     // Send the message
     if (sendto(sockfd, msg->encoded, sizeof(msg->encoded), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
         perror("sendto");

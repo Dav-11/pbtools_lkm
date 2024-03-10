@@ -124,25 +124,10 @@ static int __init pbtools_lkm_init(void)
     // reset err
     err = 0;
 
-    // receive length
+    // receive protobuf
+
     struct msghdr msg;
 	struct kvec iov;
-
-    memset(&msg, 0, sizeof(struct msghdr));
-    memset(&iov, 0, sizeof(struct kvec));
-
-    iov.iov_base = &data.size; // Allocate struct for receiving data
-    iov.iov_len = sizeof(int);
-
-    err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
-    if (err < 0) {
-        pr_err("Failed to receive UDP data (size): %d\n", err);
-        goto out_release;
-    }
-
-    pr_info("received size: %d", data.size);
-
-    // receive protobuf
 
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
@@ -155,6 +140,8 @@ static int __init pbtools_lkm_init(void)
         pr_err("Failed to receive UDP data (protobuf): %d\n", err);
         goto out_release;
     }
+
+    data.size = sizeof(data.encoded);
 
     pr_info("Received data, decoding... \n");
 
