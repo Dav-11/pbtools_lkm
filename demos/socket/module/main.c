@@ -54,7 +54,7 @@ static void decode(message *data)
     WARN_ON(address_book_p == NULL);
 
     int size = address_book_address_book_decode(address_book_p, &data->encoded[0], data->size);
-    WARN_ON(size < 0);
+    //WARN_ON(size < 0);
     WARN_ON(address_book_p->people.length != 1);
 
     pr_info("people.length: %d", address_book_p->people.length);

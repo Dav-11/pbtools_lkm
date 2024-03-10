@@ -37,3 +37,11 @@ root@ubuntu:~# dmesg
 [  356.315550] address_book:pbtools_lkm_exit(): removed
 ```
 
+### Go userspace protobuf
+This example is available also using a golang client (to ensure that this is not dependent on the library)
+
+The procedure is the same but change pt 4 with this:
+```bash
+make -C user_space_go run
+```
+
