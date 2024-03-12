@@ -16,7 +16,7 @@ const (
 
 func main() {
 
-	while true {
+	for true {
 
 		fmt.Println("input number:")
     	var input int32
@@ -29,11 +29,11 @@ func main() {
 
 		// create protobuf
 		foo := gen.Foo{
-			Bar: input
+			Bar: input,
 		}
 
 		// Marshal the Foo into bytes
-		data, err := proto.Marshal(&book)
+		data, err := proto.Marshal(&foo)
 		if err != nil {
 			panic(err)
 		}

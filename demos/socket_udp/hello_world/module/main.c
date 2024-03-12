@@ -44,7 +44,7 @@ static int get_bar(message *data)
     hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
     WARN_ON(hello_world_str == NULL);
 
-    int size = hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
+    hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
 
     return (int) hello_world_str->bar;
 }
@@ -131,6 +131,8 @@ out_release:
 
 	/* cleanup listening socket */
 	sock_release(sock);
+
+    
 out:
 	return 0;
 }
