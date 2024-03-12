@@ -21,16 +21,6 @@ MODULE_VERSION("0.1");
 #define LISTEN_BACKLOG		5       // queue length for port
 
 
-// MACRO to print peer address in connection
-#define print_sock_address(addr)						\
-	do {												\
-		printk(LOG_LEVEL "connection established to "	\
-			"%pI4:%d\n",	 							\
-			&addr.sin_addr.s_addr,						\
-			ntohs(addr.sin_port));						\
-	} while (0)
-
-
 static struct socket *sock;	/* listening (server) socket */
 //static struct socket *new_sock;	/* communication socket */
 

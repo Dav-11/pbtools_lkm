@@ -59,7 +59,7 @@ clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 load:
-	sudo insmod $(PWD)/hello_world.ko
+	sudo insmod $(PWD)/hello_world.ko &
 
 unload:
 	sudo rmmod hello_world

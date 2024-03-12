@@ -1,10 +1,6 @@
 build:
 	mkdir -p bin
 	CGO_ENABLED=0 go build -o bin/pbtools_lkm -ldflags '-extldflags "-static"' cmd/command/main.go
-	GOOS=linux GOARCH=amd64 go build -o bin/pbtools_lkm_linux_amd64 cmd/command/main.go
-	GOOS=linux GOARCH=arm64 go build -o bin/pbtools_lkm_linux_arm64 cmd/command/main.go
-	GOOS=darwin GOARCH=arm64 go build -o bin/pbtools_lkm_darwin_arm64 cmd/command/main.go
-	GOOS=windows GOARCH=amd64 go build -o bin/pbtools_lkm_amd64.exe cmd/command/main.go
 
 test:
 	$(MAKE) clean

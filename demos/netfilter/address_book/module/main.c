@@ -26,8 +26,6 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
     // consider only tcp (grpc is tcp)
     if (iph->protocol == IPPROTO_TCP) {
 
-
-
 		return NF_DROP;
 	}
 
