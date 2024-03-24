@@ -8,6 +8,7 @@
 #include <linux/tcp.h>
 #include <linux/udp.h>
 #include <linux/ip.h>
+#include <linux/skbuff.h>
 
 //#include "generated/hello_world.h"
 
@@ -43,42 +44,6 @@ typedef struct {
 //     return (int) hello_world_str->bar;
 // }
 
-void pkt_hex_dump(struct sk_buff *skb)
-{
-    size_t len;
-    int rowsize = 16;
-    int i, l, linelen, remaining;
-    int li = 0;
-    uint8_t *data, ch; 
-
-    printk("Packet hex dump:\n");
-    data = (uint8_t *) skb_mac_header(skb);
-
-    if (skb_is_nonlinear(skb)) {
-        len = skb->data_len;
-    } else {
-        len = skb->len;
-    }
-
-    remaining = len;
-    for (i = 0; i < len; i += rowsize) {
-        printk("%06d\t", li);
-
-        linelen = min(remaining, rowsize);
-        remaining -= rowsize;
-
-        for (l = 0; l < linelen; l++) {
-            ch = data[l];
-            printk(KERN_CONT "%02X ", (uint32_t) ch);
-        }
-
-        data += linelen;
-        li += 10; 
-
-        printk(KERN_CONT "\n");
-    }
-}
-
 //function to be called by hook
 unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
@@ -103,38 +68,62 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
         uint16_t src_port = ntohs(tcp->source);
         uint16_t dest_port = ntohs(tcp->dest);
 
-        pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\n", src_port, dest_port, tcp->psh);
-
         if (dest_port == MYPORT && tcp->psh) {
+
+            pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\n", src_port, dest_port, tcp->psh);
 
             /*
              * Calculate the offset to the beginning of the TCP payload
              * ip->ihl : "Internet Header Length" length of the header in 32-bit (4 bytes) words
              * tcp->doff : "Data Offset" length of the TCP header in 32-bit (4 bytes) words
              */
-            // uint32_t tcp_payload_offset = sizeof(struct ethhdr) + ip->ihl * 4 + tcp->doff * 4;
-
-            int payload_offset = ip->ihl * 4 + tcp->doff * 4;
+            // uint32_t payload_offset = sizeof(struct ethhdr) + ip->ihl * 4 + tcp->doff * 4;
+            uint32_t payload_offset = ip->ihl * 4 + tcp->doff * 4;
 
             // Accessing the payload
-            payload = (unsigned char *)ip + payload_offset;
+            //payload = (unsigned char *)ip + payload_offset;
             uint32_t payload_len = skb->len - payload_offset;
 
+
             // Debug
-            pr_info("Payload length: %u\n", payload_len);
-            pr_info("strlen: %d", strlen(payload));
+            pr_info("Payload length: %d\n", payload_len);
 
-            memcpy(str, payload, payload_len);
-            str[payload_len] = '\0';
+            if (skb_is_nonlinear(skb)) {
 
-            for(int i = 0; i < payload_len; i++)
-            {
-                pr_info("payload[%d]: %c\n", i, payload[i]);
+                pr_info("is_nonlinear: %d", 1);
+                uint32_t non_paged_data = skb->len - skb->data_len;
+                pr_info("non_paged_data: %u", non_paged_data);
+                pr_info("payload_offset: %u", payload_offset);
+
+                void *temp_buffer = kmalloc(payload_offset, GFP_ATOMIC);
+                if (!temp_buffer) {
+                    return NF_ACCEPT; // Allocation failed, drop the packet
+                }
+
+                // Copy data using skb_copy_bits
+                if (skb_copy_bits(skb, payload_offset, temp_buffer, payload_len) < 0) {
+                
+                    return NF_ACCEPT; // Copy failed, drop the packet
+                }
+
+                memcpy(str, temp_buffer + tcph->doff * 4, sizeof(payload));
+
+            } else {
+
+                payload = (unsigned char *)(skb->data + payload_offset);
+                memcpy(str, payload, payload_len);
             }
 
+            for(int i = 0; i < strlen(str); i++)
+            {
+                pr_info("payload[%d]: %X\n", i, (char) payload[i]);
+            }
             pr_info("TCP payload: %s\n", str);
+            
+            
+            //pr_info("strlen: %d", strlen(payload));
 
-            pkt_hex_dump(skb);
+            
 
             //message data;
             //memset(&data, 0, sizeof(data));
