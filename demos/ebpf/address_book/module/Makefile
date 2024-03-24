@@ -21,7 +21,7 @@ endif
 
 PWD   			:= $(shell pwd)
 EXTRA_CFLAGS   	+= -DDEBUG
-obj-m 			+= example_lkm.o
+obj-m 			+= kfunc_example.o
 
 
 build:
@@ -50,7 +50,7 @@ clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 load:
-	sudo insmod $(PWD)/example_lkm.ko &
+	sudo insmod $(PWD)/kfunc_example.ko &
 
 unload:
-	sudo rmmod example_lkm
+	sudo rmmod kfunc_example

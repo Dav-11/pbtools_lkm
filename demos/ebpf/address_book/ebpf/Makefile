@@ -1,4 +1,4 @@
-TARGET = hello
+TARGET = sk_skb
 ARCH = $(shell uname -m | sed 's/x86_64/x86/' | sed 's/aarch64/arm64/')
 
 BPF_OBJ = ${TARGET:=.bpf.o}
@@ -22,3 +22,5 @@ $(TARGET): $(BPF_OBJ)
 	bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(TARGET)
 	bpftool net attach xdp pinned /sys/fs/bpf/$(TARGET) dev lo
 
+requirements:
+	apt install -y clang llvm gcc libbpf1 libbpf-dev libbpf-tools libxdp-dev libxdp1 xdp-tools linux-tools-common
