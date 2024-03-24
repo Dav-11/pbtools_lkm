@@ -9,6 +9,8 @@
 #include <linux/udp.h>
 #include <linux/ip.h>
 
+#include "generated/hello_world.h"
+
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("netfilter_example: example tcp netfilter");
 MODULE_LICENSE("GPL");
@@ -17,6 +19,29 @@ MODULE_VERSION("0.1");
 #define MYPORT 60001
 
 static struct nf_hook_ops nfho;         //struct holding set of hook function options
+
+typedef struct {
+    int size;
+    uint8_t encoded[128];
+} message;
+
+/**
+ * This function decode the struct message and extracts bar
+ */
+static int get_bar(message *data)
+{
+    uint8_t workspace[1024];
+
+    struct hello_world_foo_t *hello_world_str;
+
+    /* Decode the message. */
+    hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
+    WARN_ON(hello_world_str == NULL);
+
+    hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
+
+    return (int) hello_world_str->bar;
+}
 
 //function to be called by hook
 unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
@@ -39,7 +64,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
         uint16_t src_port = ntohs(tcp->source);
         uint16_t dest_port = ntohs(tcp->dest);
 
-        pr_info("Received TCP packet. Source IP: %pI4:%u, Destination IP: %pI4:%u\n", ip->saddr, src_port, ip->daddr, dest_port);
+        pr_info("Received TCP packet. Source Port:%d, Destination Port:%d\n", src_port, dest_port);
 
         if (dest_port == MYPORT) {
 
@@ -56,6 +81,17 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
             // Debug
             pr_info("Payload length: %u\n", payload_len);
+
+            message data;
+            memset(&data, 0, sizeof(data));
+            memcpy(data.encoded, payload, payload_len);
+
+            pr_info("Received data, decoding... \n");
+
+            // Process received data as needed
+            int bar = get_bar(&data);
+
+            pr_info("received bar: %d", bar);
         }
 
 		//return NF_DROP;

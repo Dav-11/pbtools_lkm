@@ -30,7 +30,7 @@ obj-m 			+= hello_world_nf.o
 # YOU DON'T need this IF you have *.c-file with the name of the final kernel module :)
 hello_world_nf-y 	:= \
 	main.o \
-	pbtools.o \
+ 	pbtools.o \
 	generated/hello_world.o
 
 build:
