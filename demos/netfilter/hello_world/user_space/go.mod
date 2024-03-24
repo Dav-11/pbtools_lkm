@@ -1,5 +1,5 @@
-module server
+module hello_world
 
-go 1.22.1
+go 1.21.6
 
 require google.golang.org/protobuf v1.33.0

@@ -4,7 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-	"server/gen"
+	
+	"hello_world/gen"
 
 	"google.golang.org/protobuf/proto"
 )
