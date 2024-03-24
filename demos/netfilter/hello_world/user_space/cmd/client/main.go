@@ -1,13 +1,9 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
-
-	"hello_world/gen"
-
-	"google.golang.org/protobuf/proto"
+	"time"
 )
 
 const (
@@ -18,21 +14,7 @@ func main() {
 
 	for {
 
-		fmt.Println("input number:")
-    	var input int32
-    	_, err := fmt.Scanf("%d", &input)
-		if err != nil {
-			panic(err)
-		}
-
-    	fmt.Printf("read int: %d\n", input)
-
-		// create protobuf
-		foo := gen.Foo{
-			Bar: input,
-		}
-
-		// Connect to UDP server
+		// Connect to TCP server
 		address := fmt.Sprintf(":%d", port)
 		conn, err := net.Dial("tcp4", address)
 		if err != nil {
@@ -40,28 +22,19 @@ func main() {
 		}
     	defer conn.Close()
 
-		// Marshal the Foo into bytes
-		data, err := proto.Marshal(&foo)
+		// Message to send
+		message := "Hello from client!"
+	
+		// Send message to server
+		_, err = conn.Write([]byte(message))
 		if err != nil {
-			panic(err)
-		}
-
-		// Get the message length in bytes
-		messageLength := len(data)
-		fmt.Println("length:", messageLength)
-
-		// Prepend the message length to the payload
-		buffer := make([]byte, 4+messageLength)
-		binary.BigEndian.PutUint32(buffer[:4], uint32(messageLength))
-		copy(buffer[4:], data)
-
-		// Send the data over the connection
-		_, err = conn.Write(buffer)
-		if err != nil {
-			fmt.Println("Error sending data:", err)
+			fmt.Println(err)
 			return
 		}
 
 		fmt.Printf("Sent message to %s\n", address)
+
+		// Wait for 5 seconds before next send/receive
+		time.Sleep(5 * time.Second)
 	}
 }
