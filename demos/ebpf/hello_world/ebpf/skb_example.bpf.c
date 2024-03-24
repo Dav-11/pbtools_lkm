@@ -4,10 +4,13 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
-#include <stddef.h>
+#include <linux/kernel.h>
+#include <linux/pkt_cls.h>
 #include <bpf/bpf_endian.h>
 #include <bpf/bpf_helpers.h>
-#include <linux/pkt_cls.h>
+#include <iproute2/bpf_elf.h>
+
+#include <stdint.h>
 
 #define MYPORT 60001
 
@@ -18,7 +21,6 @@ int bpf_program(struct __sk_buff *skb) {
     void *data_end = (void *) (long) skb->data_end;
     void *data = (void *) (long) skb->data;
 
-    struct ethhdr *eth = data;
     struct iphdr *ip;
 
     /*
@@ -34,17 +36,31 @@ int bpf_program(struct __sk_buff *skb) {
     // Check if the packet is IPv4
     if (skb->protocol == bpf_htons(ETH_P_IP)) {
 
+        /*
+         * Check if the packet is big enough to contain iphdr
+         */
+        if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) > data_end) {
+            return TC_ACT_OK;
+        }
+
         // sets iphdr start after ethhdr end
         ip = (struct iphdr *)(data + sizeof(struct ethhdr));
 
         // Check if the packet is TCP & dest address is localhost
         if (ip->protocol == IPPROTO_TCP && ip->daddr == bpf_htonl(INADDR_LOOPBACK)) {
 
+            /*
+             * Check if the packet is big enough to contain udphdr
+             */
+            if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct tcphdr) > data_end) {
+                return TC_ACT_OK;
+            }
+
             struct tcphdr *tcp = (struct tcphdr *)(ip + 1);
 
             // Access fields of TCP header
-            uint16_t src_port = ntohs(tcp->source);
-            uint16_t dest_port = ntohs(tcp->dest);
+            uint16_t src_port = bpf_ntohs(tcp->source);
+            uint16_t dest_port = bpf_ntohs(tcp->dest);
 
             // Logic based on TCP ports, you can implement your custom logic here
             if (dest_port == MYPORT) {
@@ -61,7 +77,7 @@ int bpf_program(struct __sk_buff *skb) {
                 uint32_t payload_len = skb->len - tcp_payload_offset;
 
                 // Debug
-                bpf_printk("Received TCP packet. Source IP: %u.%u.%u.%u, Destination IP: %u.%u.%u.%u\n",NIPQUAD(ip->saddr), NIPQUAD(ip->daddr));
+                bpf_printk("Received TCP packet. Source: %pI4:%d, Destination: %pI4:%d\n", ip->saddr, src_port, ip->daddr, dest_port);
                 bpf_printk("Payload length: %u\n", payload_len);
 
                 // Do something, e.g., drop the packet

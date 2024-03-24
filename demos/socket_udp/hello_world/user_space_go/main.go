@@ -16,7 +16,7 @@ const (
 
 func main() {
 
-	for true {
+	for {
 
 		fmt.Println("input number:")
     	var input int32
@@ -52,7 +52,6 @@ func main() {
 
 		// Send the encoded data
 		if _, err = conn.Write(buffer.Bytes()); err != nil {
-
 			panic(err)
 		}
 	}
