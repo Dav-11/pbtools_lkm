@@ -4,7 +4,6 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
-#include <linux/kernel.h>
 #include <linux/pkt_cls.h>
 #include <bpf/bpf_endian.h>
 #include <bpf/bpf_helpers.h>
@@ -16,10 +15,12 @@
 
 
 SEC("sk_skb")
-int bpf_program(struct __sk_buff *skb) {
+int filter_protobuf(struct __sk_buff *skb) {
 
     void *data_end = (void *) (long) skb->data_end;
     void *data = (void *) (long) skb->data;
+
+    bpf_printk("ciao");
 
     struct iphdr *ip;
 
@@ -62,6 +63,8 @@ int bpf_program(struct __sk_buff *skb) {
             uint16_t src_port = bpf_ntohs(tcp->source);
             uint16_t dest_port = bpf_ntohs(tcp->dest);
 
+            bpf_printk("Received TCP packet. Source: %pI4:%d, Destination: %pI4:%d\n", ip->saddr, src_port, ip->daddr, dest_port);
+
             // Logic based on TCP ports, you can implement your custom logic here
             if (dest_port == MYPORT) {
 
@@ -77,7 +80,6 @@ int bpf_program(struct __sk_buff *skb) {
                 uint32_t payload_len = skb->len - tcp_payload_offset;
 
                 // Debug
-                bpf_printk("Received TCP packet. Source: %pI4:%d, Destination: %pI4:%d\n", ip->saddr, src_port, ip->daddr, dest_port);
                 bpf_printk("Payload length: %u\n", payload_len);
 
                 // Do something, e.g., drop the packet

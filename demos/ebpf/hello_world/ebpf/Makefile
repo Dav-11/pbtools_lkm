@@ -20,14 +20,11 @@ build:
 		skb_example.bpf.c
 
 load:
-	# Load your eBPF program into the kernel
-	bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(TARGET)
-
-	# Attach the eBPF program to a socket
-	bpftool prog attach pinned /sys/fs/bpf/$(TARGET) type sk_skb
+	@# Load your eBPF program into the kernel
+	bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(TARGET) autoattach
 
 unload:
-
+	rm -f /sys/fs/bpf/$(TARGET)
 
 $(TARGET): $(BPF_OBJ)
 	bpftool net detach xdp dev lo
