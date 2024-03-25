@@ -18,12 +18,13 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
 #define MYPORT 60001
+#define MAX_PAYLOAD_LEN 1024 // Maximum length of payload to print
 
 static struct nf_hook_ops nfho;         //struct holding set of hook function options
 
 typedef struct {
     int size;
-    char encoded[128];
+    char encoded[MAX_PAYLOAD_LEN];
 } message;
 
 /**
@@ -44,15 +45,50 @@ typedef struct {
 //     return (int) hello_world_str->bar;
 // }
 
+// Function to print TCP payload
+void print_tcp_payload(const unsigned char *payload, unsigned int payload_len) {
+    unsigned int i;
+    pr_info("TCP Payload (first %u bytes):\n", payload_len);
+    for (i = 0; i < payload_len; ++i) {
+        pr_info("%02x -> %c\n", payload[i], payload[i]);
+    }
+    pr_info("\n");
+}
+
+void handle_tcp_payload(struct sk_buff *skb)
+{
+    struct iphdr *ip;
+    struct tcphdr *tcp;
+
+    unsigned char *payload;
+    // char str[MAX_PAYLOAD_LEN];
+    // memset(str, 0, MAX_PAYLOAD_LEN);
+
+    ip = ip_hdr(skb); // Update IP header pointer
+    tcp = tcp_hdr(skb); // Update TCP header pointer
+
+    uint32_t payload_len    = ntohs(ip->tot_len) - (ip->ihl * 4) - (tcp->doff * 4);
+
+    pr_info("Payload length: %d\n", payload_len);
+
+    if (payload_len > 0) {
+
+        payload = (unsigned char *)(tcp) + (tcp->doff * 4);
+        payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
+        
+        print_tcp_payload(payload, payload_len);
+    }
+}
+
 //function to be called by hook
 unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
 
     struct iphdr *ip;
     struct tcphdr *tcp;
-    unsigned char *payload;
-    char str[1024];
-    memset(str, 0, 1024);
+
+    int non_linear = 0;
+    struct sk_buff *skb_linear;
 
     if (!skb) return NF_ACCEPT;
 
@@ -71,58 +107,35 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
         if (dest_port == MYPORT && tcp->psh) {
 
             pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\n", src_port, dest_port, tcp->psh);
+            
+            // check if linear
+            non_linear = skb_is_nonlinear(skb);
+            if (non_linear) {
 
-            /*
-             * Calculate the offset to the beginning of the TCP payload
-             * ip->ihl : "Internet Header Length" length of the header in 32-bit (4 bytes) words
-             * tcp->doff : "Data Offset" length of the TCP header in 32-bit (4 bytes) words
-             */
-            // uint32_t payload_offset = sizeof(struct ethhdr) + ip->ihl * 4 + tcp->doff * 4;
-            uint32_t payload_offset = ip->ihl * 4 + tcp->doff * 4;
-
-            // Accessing the payload
-            //payload = (unsigned char *)ip + payload_offset;
-            uint32_t payload_len = skb->len - payload_offset;
-
-
-            // Debug
-            pr_info("Payload length: %d\n", payload_len);
-
-            if (skb_is_nonlinear(skb)) {
-
-                pr_info("is_nonlinear: %d", 1);
-                uint32_t non_paged_data = skb->len - skb->data_len;
-                pr_info("non_paged_data: %u", non_paged_data);
-                pr_info("payload_offset: %u", payload_offset);
-
-                void *temp_buffer = kmalloc(payload_offset, GFP_ATOMIC);
-                if (!temp_buffer) {
-                    return NF_ACCEPT; // Allocation failed, drop the packet
-                }
-
-                // Copy data using skb_copy_bits
-                if (skb_copy_bits(skb, payload_offset, temp_buffer, payload_len) < 0) {
+                pr_info("is_nonlinear: %d", non_linear);
                 
-                    return NF_ACCEPT; // Copy failed, drop the packet
+                skb_linear = skb_copy(skb, GFP_ATOMIC); // Make a copy to preserve the original skb
+                if (!skb_linear) {
+                    printk(KERN_ERR "Failed to allocate linearized skb\n");
+                    return NF_DROP; // Drop packet if linearization fails
                 }
 
-                memcpy(str, temp_buffer + tcph->doff * 4, sizeof(payload));
+                // linearize
+                int ret = skb_linearize(skb_linear);
+                if (ret != 0) {
+                    
+                    printk(KERN_ERR "Failed to linearize skb\n");
+                    kfree_skb(skb_linear); // Free the linearized skb
+                    return NF_DROP; // Drop packet if linearization fails
+                }
+
+                // Process the linearized skb
+                handle_tcp_payload(skb_linear);
 
             } else {
 
-                payload = (unsigned char *)(skb->data + payload_offset);
-                memcpy(str, payload, payload_len);
+                handle_tcp_payload(skb);
             }
-
-            for(int i = 0; i < strlen(str); i++)
-            {
-                pr_info("payload[%d]: %X\n", i, (char) payload[i]);
-            }
-            pr_info("TCP payload: %s\n", str);
-            
-            
-            //pr_info("strlen: %d", strlen(payload));
-
             
 
             //message data;
