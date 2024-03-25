@@ -24,7 +24,7 @@ static struct nf_hook_ops nfho;         //struct holding set of hook function op
 
 typedef struct {
     int size;
-    char encoded[MAX_PAYLOAD_LEN];
+    unsigned char encoded[MAX_PAYLOAD_LEN];
 } message;
 
 /**
@@ -46,9 +46,8 @@ typedef struct {
 // }
 
 // Function to print TCP payload
-void print_tcp_payload(const unsigned char *payload, unsigned int payload_len) {
+void print_hex(const unsigned char *payload, unsigned int payload_len) {
     unsigned int i;
-    pr_info("TCP Payload (first %u bytes):\n", payload_len);
     for (i = 0; i < payload_len; ++i) {
         pr_info("%02x -> %c\n", payload[i], payload[i]);
     }
@@ -61,8 +60,8 @@ void handle_tcp_payload(struct sk_buff *skb)
     struct tcphdr *tcp;
 
     unsigned char *payload;
-    // char str[MAX_PAYLOAD_LEN];
-    // memset(str, 0, MAX_PAYLOAD_LEN);
+    char str[MAX_PAYLOAD_LEN];
+    memset(str, 0, MAX_PAYLOAD_LEN);
 
     ip = ip_hdr(skb); // Update IP header pointer
     tcp = tcp_hdr(skb); // Update TCP header pointer
@@ -76,7 +75,16 @@ void handle_tcp_payload(struct sk_buff *skb)
         payload = (unsigned char *)(tcp) + (tcp->doff * 4);
         payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
         
-        print_tcp_payload(payload, payload_len);
+        pr_info("Payload:\n");
+        print_hex(payload, payload_len);
+
+        // convert to message struct
+        message data;
+        memset(&data, 0, sizeof(data));
+        memcpy(data.encoded, payload, payload_len);
+
+        pr_info("Data.encoded:\n");
+        print_hex(data.encoded, strlen(data.encoded));
     }
 }
 
@@ -138,9 +146,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
             }
             
 
-            //message data;
-            //memset(&data, 0, sizeof(data));
-            //memcpy(data.encoded, payload, payload_len);
+            
 
             //pr_info("Intercepted message: %s \n", data.encoded);
 
