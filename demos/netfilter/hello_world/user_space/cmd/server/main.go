@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
+	"hello_world/gen"
 	"net"
+
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -33,16 +37,37 @@ func main() {
 		}
 		defer conn.Close()
 
-		// Receive data from client
-		data := make([]byte, 1024) // Buffer for receiving data
-		n, err := conn.Read(data)
-		if err != nil {
-			fmt.Println(err)
-			continue
+		// Create a new message object
+		message := &gen.Foo{}
+
+		// Read the message length
+		var messageLength uint32
+		if err := binary.Read(conn, binary.BigEndian, &messageLength); err != nil {
+			
+			fmt.Println("Error reading message length:", err)
+			return
 		}
 
-		// Convert received data to string (remove trailing null bytes)
-		message := string(data[:n])
-		fmt.Printf("Received from client: %s\n", message)
+		fmt.Println("Received length:", messageLength)
+
+		// Create a buffer to hold the entire data (length + payload)
+		buffer := make([]byte, messageLength)
+
+		// Read the complete data (including length)
+		if _, err = conn.Read(buffer); err != nil {
+			
+			fmt.Println("Error reading message data:", err)
+			return
+		}
+
+		// Now you can use proto.Unmarshal on the extracted payload
+		err = proto.Unmarshal(buffer, message)
+		if err != nil {
+			fmt.Println("Error unmarshalling message:", err)
+			return
+		}
+
+		// Process the message (replace with your logic)
+		fmt.Printf("Received message: %v\n", message)
 	}
 }

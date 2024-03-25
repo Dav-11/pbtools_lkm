@@ -10,7 +10,7 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
-//#include "generated/hello_world.h"
+#include "generated/hello_world.h"
 
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("netfilter_example: example tcp netfilter");
@@ -23,27 +23,27 @@ MODULE_VERSION("0.1");
 static struct nf_hook_ops nfho;         //struct holding set of hook function options
 
 typedef struct {
-    int size;
+    uint32_t size;
     unsigned char encoded[MAX_PAYLOAD_LEN];
 } message;
 
 /**
  * This function decode the struct message and extracts bar
  */
-// static int get_bar(message *data)
-// {
-//     uint8_t workspace[1024];
+static int get_bar(message *data)
+{
+    uint8_t workspace[1024];
 
-//     struct hello_world_foo_t *hello_world_str;
+    struct hello_world_foo_t *hello_world_str;
 
-//     /* Decode the message. */
-//     hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
-//     WARN_ON(hello_world_str == NULL);
+    /* Decode the message. */
+    hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
+    WARN_ON(hello_world_str == NULL);
 
-//     hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
+    hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
 
-//     return (int) hello_world_str->bar;
-// }
+    return (int) hello_world_str->bar;
+}
 
 // Function to print TCP payload
 void print_hex(const unsigned char *payload, unsigned int payload_len) {
@@ -54,7 +54,7 @@ void print_hex(const unsigned char *payload, unsigned int payload_len) {
     pr_info("\n");
 }
 
-void handle_tcp_payload(struct sk_buff *skb)
+int handle_tcp_payload(struct sk_buff *skb)
 {
     struct iphdr *ip;
     struct tcphdr *tcp;
@@ -74,18 +74,33 @@ void handle_tcp_payload(struct sk_buff *skb)
 
         payload = (unsigned char *)(tcp) + (tcp->doff * 4);
         payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
-        
+
+        // print full payload in hex
         pr_info("Payload:\n");
         print_hex(payload, payload_len);
 
-        // convert to message struct
+        // create message struct
         message data;
         memset(&data, 0, sizeof(data));
-        memcpy(data.encoded, payload, payload_len);
+
+        // copy in data.encoded memory from payload excluding first 4 bytes (len)
+        memcpy(data.encoded, payload + 4, payload_len - 4);
+
+        // get size (first 4 bytes)
+        data.size = (uint32_t) ntohl(*((uint32_t *) payload));
+
+        pr_info("Found size: %u\n", data.size);
 
         pr_info("Data.encoded:\n");
         print_hex(data.encoded, strlen(data.encoded));
+
+        int bar = get_bar(&data);
+        pr_info("received bar: %d", bar);
+
+        return bar;
     }
+
+    return -1;
 }
 
 //function to be called by hook
@@ -97,6 +112,8 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
     int non_linear = 0;
     struct sk_buff *skb_linear;
+
+    int bar = -1;
 
     if (!skb) return NF_ACCEPT;
 
@@ -120,7 +137,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
             non_linear = skb_is_nonlinear(skb);
             if (non_linear) {
 
-                pr_info("is_nonlinear: %d", non_linear);
+                //pr_info("is_nonlinear: %d", non_linear);
                 
                 skb_linear = skb_copy(skb, GFP_ATOMIC); // Make a copy to preserve the original skb
                 if (!skb_linear) {
@@ -138,25 +155,21 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
                 }
 
                 // Process the linearized skb
-                handle_tcp_payload(skb_linear);
+                bar = handle_tcp_payload(skb_linear);
 
             } else {
 
-                handle_tcp_payload(skb);
+                bar = handle_tcp_payload(skb);
             }
-            
 
-            
 
-            //pr_info("Intercepted message: %s \n", data.encoded);
+            // if bar > 50 drop pkg
+            if (bar > 50) {
 
-            // Process received data as needed
-            //int bar = get_bar(&data);
-
-            //pr_info("received bar: %d", bar);
+                pr_info("bar > 50: dropped pkg");
+                return NF_DROP;
+            }
         }
-
-		//return NF_DROP;
 	}
 
     return NF_ACCEPT;
