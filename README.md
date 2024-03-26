@@ -1,7 +1,7 @@
 # pbtools_lkm
 Protobuf implementation as a kernel module.
 
-> This is a university project, DO NOT USE IT IN PROD as is.
+> This is a university project, **DO NOT USE IT IN PROD** as is.
 
 ## Docs
 See the [Docs](docs) folder for docs or build them locally (requires docker installed):
