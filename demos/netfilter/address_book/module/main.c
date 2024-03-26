@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
 #include <linux/kernel.h>
@@ -10,15 +12,16 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
-#include "generated/hello_world.h"
+#include "generated/address_book.h"
 
 MODULE_AUTHOR("Davide Collovigh");
-MODULE_DESCRIPTION("netfilter_example: hello_world protobuf");
+MODULE_DESCRIPTION("netfilter_example: address_book protobuf");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define MYPORT 60001
+#define MYPORT          60001
 #define MAX_PAYLOAD_LEN 1024 // Maximum length of payload to print
+
 
 static struct nf_hook_ops nfho;         //struct holding set of hook function options
 
@@ -27,31 +30,41 @@ typedef struct {
     unsigned char encoded[MAX_PAYLOAD_LEN];
 } message;
 
-/**
- * This function decode the struct message and extracts bar
- */
-static int get_bar(message *data)
+struct address_book_address_book_t *decode_address_book(message *data, uint8_t *workspace)
 {
-    uint8_t workspace[1024];
-
-    struct hello_world_foo_t *hello_world_str;
+    struct address_book_address_book_t *address_book_p;
+    struct address_book_person_t *person_p;
+    struct address_book_person_phone_number_t *phone_number_p;
 
     /* Decode the message. */
-    hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
-    WARN_ON(hello_world_str == NULL);
+    address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
+    WARN_ON(address_book_p == NULL);
 
-    hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
+    int size = address_book_address_book_decode(address_book_p, &data->encoded[0], data->size);
+    //WARN_ON(size < 0);
+    WARN_ON(address_book_p->people.length != 1);
 
-    return (int) hello_world_str->bar;
-}
+    pr_info("people.length: %d", address_book_p->people.length);
 
-// Function to print TCP payload
-void print_hex(const unsigned char *payload, unsigned int payload_len) {
-    unsigned int i;
-    for (i = 0; i < payload_len; ++i) {
-        pr_info("%02x -> %c\n", payload[i], payload[i]);
-    }
-    pr_info("\n");
+    /* Check the decoded person. */
+    person_p = &address_book_p->people.items_p[0];
+    WARN_ON(strcmp(person_p->name_p, "Kalle Kula") != 0);
+    WARN_ON(person_p->id != 56);
+    pr_info("person_p->id: %d", person_p->id);
+
+    WARN_ON(strcmp(person_p->email_p, "kalle.kula@foobar.com") != 0);
+    WARN_ON(person_p->phones.length != 2);
+
+    /* Check home phone number. */
+    phone_number_p = &person_p->phones.items_p[0];
+    WARN_ON(strcmp(phone_number_p->number_p, "+46701232345") != 0);
+    WARN_ON(phone_number_p->type != address_book_person_home_e);
+    pr_info("phone_number_p->number_p: %s", phone_number_p->number_p);
+
+    /* Check work phone number. */
+    phone_number_p = &person_p->phones.items_p[1];
+    WARN_ON(strcmp(phone_number_p->number_p, "+46999999999") != 0);
+    WARN_ON(phone_number_p->type != address_book_person_work_e);
 }
 
 int handle_tcp_payload(struct sk_buff *skb)
@@ -114,6 +127,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
     struct sk_buff *skb_linear;
 
     int bar = -1;
+    uint8_t workspace[1024];
 
     if (!skb) return NF_ACCEPT;
 
@@ -162,8 +176,10 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
                 bar = handle_tcp_payload(skb);
             }
 
-
-            // if bar > 50 drop pkg
+            /*
+             * Handle protobuf
+             * 
+             */
             if (bar > 50) {
 
                 pr_info("bar > 50: dropped pkg");
@@ -180,9 +196,9 @@ static int __init pbtools_lkm_init(void)
     pr_info("Loaded module\n");
 
     nfho.hook       = (nf_hookfn*)hook_func;    /* hook function */
-    nfho.hooknum    = NF_INET_LOCAL_IN;           /* packets to this machine */
+    nfho.hooknum    = NF_INET_LOCAL_IN;         /* packets to this machine */
     nfho.pf         = PF_INET;                  /* IPv4 */
-    nfho.priority   = NF_IP_PRI_FIRST;           /* min hook priority */
+    nfho.priority   = NF_IP_PRI_FIRST;          /* min hook priority */
     
     nf_register_net_hook(&init_net, &nfho);
 
