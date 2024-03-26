@@ -30,44 +30,76 @@ typedef struct {
     unsigned char encoded[MAX_PAYLOAD_LEN];
 } message;
 
-struct address_book_address_book_t *decode_address_book(message *data, uint8_t *workspace)
+// Function to print TCP payload
+void print_hex(const unsigned char *payload, unsigned int payload_len)
 {
-    struct address_book_address_book_t *address_book_p;
-    struct address_book_person_t *person_p;
-    struct address_book_person_phone_number_t *phone_number_p;
-
-    /* Decode the message. */
-    address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
-    WARN_ON(address_book_p == NULL);
-
-    int size = address_book_address_book_decode(address_book_p, &data->encoded[0], data->size);
-    //WARN_ON(size < 0);
-    WARN_ON(address_book_p->people.length != 1);
-
-    pr_info("people.length: %d", address_book_p->people.length);
-
-    /* Check the decoded person. */
-    person_p = &address_book_p->people.items_p[0];
-    WARN_ON(strcmp(person_p->name_p, "Kalle Kula") != 0);
-    WARN_ON(person_p->id != 56);
-    pr_info("person_p->id: %d", person_p->id);
-
-    WARN_ON(strcmp(person_p->email_p, "kalle.kula@foobar.com") != 0);
-    WARN_ON(person_p->phones.length != 2);
-
-    /* Check home phone number. */
-    phone_number_p = &person_p->phones.items_p[0];
-    WARN_ON(strcmp(phone_number_p->number_p, "+46701232345") != 0);
-    WARN_ON(phone_number_p->type != address_book_person_home_e);
-    pr_info("phone_number_p->number_p: %s", phone_number_p->number_p);
-
-    /* Check work phone number. */
-    phone_number_p = &person_p->phones.items_p[1];
-    WARN_ON(strcmp(phone_number_p->number_p, "+46999999999") != 0);
-    WARN_ON(phone_number_p->type != address_book_person_work_e);
+    unsigned int i;
+    for (i = 0; i < payload_len; ++i) {
+        pr_info("%02x -> %c\n", payload[i], payload[i]);
+    }
+    pr_info("\n");
 }
 
-int handle_tcp_payload(struct sk_buff *skb)
+unsigned int process_address_book(message *data)
+{
+    uint8_t workspace[1024];
+
+    struct address_book_address_book_t *address_book_p;
+    struct address_book_person_t *person_p;
+    struct address_book_phone_number_t *phone_number_p;
+
+    /* 
+     * Decode the message.
+     */
+    address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
+
+    address_book_address_book_decode(address_book_p, &data->encoded[0], data->size);
+    pr_info("people.length: %d", address_book_p->people.length);
+
+
+    /*
+     * checks:
+     * Drop pkg if first person does not have 2 WORK phone numbers
+     */
+
+    // counter x matches
+    int match = 0;
+
+    // get first person
+    person_p = &address_book_p->people.items_p[0];
+    pr_info("person_p->id: %d", person_p->id);
+
+    // get number of phones
+    int phones_len = person_p->phones.length;
+    pr_info("phones_len: %d", phones_len);
+    WARN_ON(phones_len != 5);
+
+    // cycle across phone numbers
+    for(int i = 0; i < phones_len; i++ ) {
+
+        phone_number_p = &person_p->phones.items_p[i];
+
+        //pr_info("[type: %d, phone: %s]", phone_number_p->type, phone_number_p->number_p);
+
+        if (phone_number_p->type == address_book_work_e ) {
+
+            pr_info("Found match: [type: %d, phone: %s]", phone_number_p->type, phone_number_p->number_p);
+            match++;
+        }
+    }
+
+    // if match < 2 -> DROP
+    if (match < 2) {
+
+        pr_warn("dropped pkg");
+        return NF_DROP;
+    }
+
+    pr_warn("accepted pkg");
+    return NF_ACCEPT;
+}
+
+unsigned int handle_tcp_payload(struct sk_buff *skb)
 {
     struct iphdr *ip;
     struct tcphdr *tcp;
@@ -89,8 +121,8 @@ int handle_tcp_payload(struct sk_buff *skb)
         payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
 
         // print full payload in hex
-        pr_info("Payload:\n");
-        print_hex(payload, payload_len);
+        //pr_info("Payload:\n");
+        //print_hex(payload, payload_len);
 
         // create message struct
         message data;
@@ -101,19 +133,15 @@ int handle_tcp_payload(struct sk_buff *skb)
 
         // get size (first 4 bytes)
         data.size = (uint32_t) ntohl(*((uint32_t *) payload));
-
         pr_info("Found size: %u\n", data.size);
 
-        pr_info("Data.encoded:\n");
-        print_hex(data.encoded, strlen(data.encoded));
+        //pr_info("Data.encoded:\n");
+        //print_hex(data.encoded, strlen(data.encoded));
 
-        int bar = get_bar(&data);
-        pr_info("received bar: %d", bar);
-
-        return bar;
+        return process_address_book(&data);
     }
 
-    return -1;
+    return NF_ACCEPT;
 }
 
 //function to be called by hook
@@ -125,9 +153,6 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
     int non_linear = 0;
     struct sk_buff *skb_linear;
-
-    int bar = -1;
-    uint8_t workspace[1024];
 
     if (!skb) return NF_ACCEPT;
 
@@ -169,21 +194,11 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
                 }
 
                 // Process the linearized skb
-                bar = handle_tcp_payload(skb_linear);
+                return handle_tcp_payload(skb_linear);
 
             } else {
 
-                bar = handle_tcp_payload(skb);
-            }
-
-            /*
-             * Handle protobuf
-             * 
-             */
-            if (bar > 50) {
-
-                pr_info("bar > 50: dropped pkg");
-                return NF_DROP;
+                return handle_tcp_payload(skb);
             }
         }
 	}

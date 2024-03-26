@@ -32,6 +32,7 @@ make client
 ```
 
 ## Address Book
+Drops packages that have less than 2 `WORK` phone number inside the the first `Person.Phones`.
 
 ### Proto
 ```proto

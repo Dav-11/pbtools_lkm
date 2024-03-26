@@ -17,7 +17,7 @@ MODULE_DESCRIPTION("netfilter_example: hello_world protobuf");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define MYPORT 60001
+#define MYPORT          60001
 #define MAX_PAYLOAD_LEN 1024 // Maximum length of payload to print
 
 static struct nf_hook_ops nfho;         //struct holding set of hook function options
@@ -46,7 +46,8 @@ static int get_bar(message *data)
 }
 
 // Function to print TCP payload
-void print_hex(const unsigned char *payload, unsigned int payload_len) {
+void print_hex(const unsigned char *payload, unsigned int payload_len)
+{
     unsigned int i;
     for (i = 0; i < payload_len; ++i) {
         pr_info("%02x -> %c\n", payload[i], payload[i]);

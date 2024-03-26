@@ -59,7 +59,7 @@ clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 load:
-	sudo insmod $(PWD)/address_book_nf.ko &
+	sudo insmod $(PWD)/address_book_nf.ko
 
 unload:
 	sudo rmmod address_book_nf
