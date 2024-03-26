@@ -1,6 +1,5 @@
 build:
-	mkdir -p bin
-	CGO_ENABLED=0 go build -o bin/pbtools_lkm -ldflags '-extldflags "-static"' cmd/command/main.go
+	go build -o bin/ cmd/command/main.go
 
 test:
 	$(MAKE) clean
