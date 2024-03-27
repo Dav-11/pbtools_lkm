@@ -30,7 +30,7 @@ obj-m 			+= hello_world.o
 # YOU DON'T need this IF you have *.c-file with the name of the final kernel module :)
 hello_world-y 	:= \
 	main.o \
-	pbtools.o \
+	../../../common/pbtools.o \
 	generated/hello_world.o
 
 build:
@@ -57,6 +57,7 @@ clean:
 	@echo "--- cleaning ---"
 	@echo
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	rm -rf venv
 
 load:
 	sudo insmod $(PWD)/hello_world.ko &
@@ -71,4 +72,11 @@ requirements:
 generate:
 	rm -rf generated
 	mkdir -p generated
-	cd generated && export PYTHONPATH=$(CURDIR) && ../venv/bin/python3 -m pbtools generate_c_source ../proto/hello_world.proto
+	cd generated && \
+		export PYTHONPATH=../../../.. && \
+		../venv/bin/python3 -m pbtools generate_c_source ../proto/hello_world.proto
+
+	@
+	@ echo "correcting non-standard pbtools.h location"
+	@
+	@ sed -i 's/#include "..\/pbtools.h"/#include "..\/..\/..\/..\/common\/pbtools.h"/' generated/hello_world.h

@@ -1,40 +1,57 @@
 # Netfilter
 
-## Hello World
+## Instructions
+
+1. CD into example directory
+```shell
+cd <example_folder>
+```
+2. Setup python venv and install requirements
+```shell
+make -C module requirements
+```
+3. Regenerate code from protos
+```shell
+make -C module generate
+```
+4. Compile module
+```shell
+make -C module
+```
+5. Install module
+```shell
+make -C module install
+```
+6. Load module
+```shell
+make -C module load
+```
+7. Start server app
+```shell
+make -c user_space server 
+```
+8. Start the client (in a new shell)
+```shell
+make -c user_space client
+```
+
+## Examples
+
+### Hello World
 This hook drops all packages where bar > 50
 
-### Proto
+#### Proto
 ```proto
 message Foo {
     int32 bar = 1;
 }
 ```
 
-### How to run
-1. Build, Install & Load module
-```shell
-cd hello_world/module
-make
-make install
-make load
-```
 
-2. Start server
-```shell
-cd hello_world/user_space
-make server
-```
-
-3. Start client
-```shell
-cd hello_world/user_space
-make client
-```
-
-## Address Book
+### Address Book
 Drops packages that have less than 2 `WORK` phone number inside the the first `Person.Phones`.
 
-### Proto
+#### Proto
 ```proto
 syntax = "proto3";
 
@@ -61,25 +78,4 @@ message Person {
 message AddressBook {
     repeated Person people = 1;
 }
-```
-
-### How to run
-1. Build, Install & Load module
-```shell
-cd address_book/module
-make
-make install
-make load
-```
-
-2. Start server
-```shell
-cd address_book/user_space
-make server
-```
-
-3. Start client
-```shell
-cd address_book/user_space
-make client
 ```

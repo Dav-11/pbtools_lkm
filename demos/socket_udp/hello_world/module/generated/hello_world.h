@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-#include "../pbtools.h"
+#include "../../../../common/pbtools.h"
 
 /**
  * Message hello_world.Foo.
