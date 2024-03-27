@@ -7,37 +7,29 @@ This folder contains examples of LKM that open UDP sockets in the kernel and dec
 ```shell
 cd <example_folder>
 ```
-2. Setup python venv and install requirements
-```shell
-make -C module requirements
-```
-3. Regenerate code from protos
-```shell
-make -C module generate
-```
-4. Compile module
+2. Compile module
 ```shell
 make -C module
 ```
-5. Install module
+3. Install module
 ```shell
 make -C module install
 ```
-6. Load module
+4. Load module
 ```shell
 make -C module load
 ```
-7. Compile and run userspace app
+5. Compile and run userspace app
 ```shell
 make -C user_space run
 ```
-8. Unload the module
+6. Unload the module
 ```shell
 make -C module unload
 ```
 > For some reason if you do not do this some logs will not appear
 
-9. You should see logs like these using dmesg
+7. You should see logs like these using `dmesg`
 ```shell
 root@ubuntu:~# dmesg
 [  326.742819] address_book:pbtools_lkm_init(): Loaded module

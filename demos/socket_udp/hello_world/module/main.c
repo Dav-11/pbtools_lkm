@@ -10,7 +10,7 @@
 #include <linux/fs.h>
 #include <net/sock.h>
 
-#include "generated/hello_world.h"
+#include "../../../common/hello_world/generated/hello_world.h"
 
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");

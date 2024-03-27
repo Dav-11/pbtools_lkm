@@ -8,9 +8,6 @@ This folder contains some examples of the lib integration inside the kernel.
 
 ## [Netfilter](netfilter/README.md)
 
-## [TCP Sockets](socket_tcp/README.md)
-Still WIP
-
 ## [eBPF + kfuncs](ebpf/README.md)
 Still WIP
 

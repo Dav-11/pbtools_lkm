@@ -10,7 +10,7 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
-#include "generated/hello_world.h"
+#include "../../../common/hello_world/generated/hello_world.h"
 
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("netfilter_example: hello_world protobuf");

@@ -10,7 +10,7 @@
 #include <linux/fs.h>
 #include <net/sock.h>
 
-#include "generated/address_book.h"
+#include "../../../common/address_book/generated/address_book.h"
 
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");
@@ -37,7 +37,7 @@ static void decode(message *data)
 
     struct address_book_address_book_t *address_book_p;
     struct address_book_person_t *person_p;
-    struct address_book_person_phone_number_t *phone_number_p;
+    struct address_book_phone_number_t *phone_number_p;
 
     /* Decode the message. */
     address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
@@ -61,13 +61,13 @@ static void decode(message *data)
     /* Check home phone number. */
     phone_number_p = &person_p->phones.items_p[0];
     WARN_ON(strcmp(phone_number_p->number_p, "+46701232345") != 0);
-    WARN_ON(phone_number_p->type != address_book_person_home_e);
+    WARN_ON(phone_number_p->type != address_book_home_e);
     pr_info("phone_number_p->number_p: %s", phone_number_p->number_p);
 
     /* Check work phone number. */
     phone_number_p = &person_p->phones.items_p[1];
     WARN_ON(strcmp(phone_number_p->number_p, "+46999999999") != 0);
-    WARN_ON(phone_number_p->type != address_book_person_work_e);
+    WARN_ON(phone_number_p->type != address_book_work_e);
 }
 
 static int __init pbtools_lkm_init(void)

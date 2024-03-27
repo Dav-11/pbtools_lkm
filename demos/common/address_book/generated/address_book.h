@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-#include "../../../../common/pbtools.h"
+#include "../../pbtools.h"
 
 /**
  * Enum address_book.PhoneType.

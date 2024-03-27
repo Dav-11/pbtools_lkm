@@ -12,7 +12,7 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
-#include "generated/address_book.h"
+#include "../../../common/address_book/generated/address_book.h"
 
 MODULE_AUTHOR("Davide Collovigh");
 MODULE_DESCRIPTION("netfilter_example: address_book protobuf");
