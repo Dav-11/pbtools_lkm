@@ -4,38 +4,38 @@ The project is composed by two main pieces:
 - Folder Initializer
 - Code Generator
 
-# Folder Initializer
+## Folder Initializer
 Creates new folder from template
 
-## requirements
+### requirements
 - golang >= 1.21.6 (to build from source)
 
-## build executable
+### build executable
 ```shell
 make
 ```
 
-## Usage
+### Usage
 ```shell
 ./pbtools_lkm init new_folder_name
 ```
 
-# Code Generator
+## Code Generator
 Generates `.c` and `.h` file from `.proto` specification
 
-## Requirements
+### Requirements
 - python3
 - python3-venv
 - pip3
 
-## Setup environment
+### Setup environment
 ```shell
 python3 -m venv ../..
 env PYTHONPATH=../.. \
    pip3 install textparser
 ```
 
-## Usage
+### Usage
 ```shell
 env PYTHONPATH=../../.. \
    python3 -m pbtools generate_c_source path/to/file.proto
