@@ -1,5 +1,7 @@
 # Usage
 
+Here it is explained how to initialize, compile and load a new module
+
 ## Requirements
 - golang >= 1.21.6
 - python3
@@ -14,7 +16,7 @@
 make
 ```
 
-## Create folder
+## Init module (creates new folder)
 ```
 bin/pbtools_lkm init <folder_name>
 cd <folder_name>

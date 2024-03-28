@@ -51,3 +51,23 @@ hello_world:
 	@
 	sed -i 's/#include "..\/pbtools.h"/#include "..\/..\/pbtools.h"/' hello_world/generated/hello_world.h
 
+.PHONY: oneof
+oneof:
+	
+	@
+	@ echo "clean old files if exists"
+	@
+	mkdir -p oneof/generated
+	rm -f oneof/generated/*.c
+
+	@
+	@ echo "Generating..."
+	@
+	cd oneof/generated && \
+		export PYTHONPATH=../.. && \
+		../../venv/bin/python3 -m pbtools generate_c_source ../proto/oneof.proto
+
+	@
+	@ echo "correcting non-standard pbtools.h location"
+	@
+	sed -i 's/#include "..\/pbtools.h"/#include "..\/..\/pbtools.h"/' hello_world/generated/hello_world.h
