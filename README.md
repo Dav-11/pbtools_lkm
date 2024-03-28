@@ -65,9 +65,11 @@ make clean
 Inside the [Examples](examples/README.md) folder there are some examples on how this project can be used. In particular there are:
 
 ### [UDP Sockets](examples/socket_udp/README.md)
+![UDP Socket](docs/img/UDP_socket.png)
 Here an UDP socket is opened inside the LKM to receive a protobuf message, that is then decoded and printed to dmesg.
 
 ### [Netfilter](examples/netfilter/README.md)
+![Netfilter](docs/img/netfilter.png)
 Here the module is used to filter tcp packets between two applications and apply some drop logics based on the protobuf content.
 
 
