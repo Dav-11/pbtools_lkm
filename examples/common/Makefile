@@ -1,4 +1,4 @@
-examples := address_book hello_world oneof
+examples := address_book hello_world oneof floats
 
 all: requirements $(examples)
 	@
@@ -7,7 +7,7 @@ all: requirements $(examples)
 
 requirements:
 	python3 -m venv ./venv
-	PYTHONPATH=$(CURDIR) venv/bin/pip3 install textparser
+	PYTHONPATH=$(CURDIR) ./venv/bin/pip3 install textparser
 
 .PHONY: address_book
 address_book:
@@ -71,3 +71,27 @@ oneof:
 	@ echo "correcting non-standard pbtools.h location"
 	@
 	sed -i 's/#include "..\/pbtools.h"/#include "..\/..\/pbtools.h"/' hello_world/generated/hello_world.h
+
+.PHONY: floats
+floats:
+	
+	@
+	@ echo "clean old files if exists"
+	@
+	mkdir -p floats/generated
+	rm -f floats/generated/*.c
+
+	@
+	@ echo "Generating..."
+	@
+	cd floats/generated && \
+		export PYTHONPATH=../.. && \
+		../../venv/bin/python3 -m pbtools generate_c_source ../proto/floats.proto
+
+	@
+	@ echo "correcting non-standard pbtools.h location"
+	@
+	sed -i 's/#include "..\/pbtools.h"/#include "..\/..\/pbtools.h"/' floats/generated/floats.h
+
+clean:
+	rm -rf venv
