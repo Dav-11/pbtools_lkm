@@ -20,7 +20,7 @@ endif
 
 
 PWD   			:= $(shell pwd)
-EXTRA_CFLAGS   	+= -DDEBUG
+EXTRA_CFLAGS   	+= -DDEBUG -msoft-float -msse -msse2 -msse3 -msse4
 obj-m 			+= floats_nf.o
 
 # we have no file "pbtools_lkm.c" in this example

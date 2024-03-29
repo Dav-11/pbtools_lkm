@@ -11,7 +11,8 @@
 #include <linux/udp.h>
 #include <linux/ip.h>
 #include <linux/skbuff.h>
-#include <asm/fpu.h>
+#include <asm/uaccess.h>
+#include <asm/fpu/api.h>
 
 #include "../../../common/floats/generated/floats.h"
 
@@ -46,6 +47,7 @@ unsigned int process_message(message *data)
     uint8_t workspace[MAX_PAYLOAD_LEN];
 
     struct hello_world_foo_t *hello_world_str;
+    unsigned long flags;
 
     /* 
      * Decode the message.
@@ -61,9 +63,32 @@ unsigned int process_message(message *data)
      * Drop pkg if float bigger than 10
      */
 
+    pr_info("%u", hello_world_str->bar);
+    
+    // Save the current FPU state
+    local_irq_save(flags);
     kernel_fpu_begin();
-    int discard = (float) hello_world_str->bar > 10;
+
+    union FloatConverter {
+        uint32_t raw_value;
+        float float_value;
+    };
+
+    union FloatConverter converter;
+    converter.raw_value = hello_world_str->bar;
+
+    float barf = converter.float_value;
+    int bari = (int)barf;
+    pr_info("bari: %d", bari);
+    
+    int treshold = 10;
+    int discard = (bari > treshold);
+
+    pr_info("is_discarded: %d", discard);
+    
+    // Restore the saved FPU state
     kernel_fpu_end();
+    local_irq_restore(flags);
     
     if (discard) {
 

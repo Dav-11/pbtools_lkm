@@ -13,3 +13,6 @@ Since floating points types are not available on every kernel they have been rep
 | ------ | ------------ |
 | float  | uint32_t     |
 | double | uint64_t     |
+
+#### To compile
+- https://stackoverflow.com/questions/1556142/sse-register-return-with-sse-disabled
