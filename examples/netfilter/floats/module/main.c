@@ -60,10 +60,10 @@ unsigned int process_message(message *data)
 
     /*
      * checks:
-     * Drop pkg if float bigger than 10
+     * Drop pkg if float bigger than 10.1
      */
 
-    pr_info("%u", hello_world_str->bar);
+    //pr_info("%u", hello_world_str->bar);
     
     // Save the current FPU state
     local_irq_save(flags);
@@ -78,19 +78,24 @@ unsigned int process_message(message *data)
     converter.raw_value = hello_world_str->bar;
 
     float barf = converter.float_value;
-    int bari = (int)barf;
-    pr_info("bari: %d", bari);
+    pr_info("bar_i: %d", (int) barf);
+    //int bari = (int)barf;
+    //pr_info("bari: %d", bari);
     
-    int treshold = 10;
-    int discard = (bari > treshold);
+    //int treshold = 10;
+    float treshold_f = 10.1;
 
-    pr_info("is_discarded: %d", discard);
+    //int discard_i = (bari > treshold);
+    int discard_f = (barf > treshold_f);
+
+    //pr_info("is_discarded_int: %d", discard_i);
+    pr_info("to_discard: %d", discard_f);
     
     // Restore the saved FPU state
     kernel_fpu_end();
     local_irq_restore(flags);
     
-    if (discard) {
+    if (discard_f) {
 
         pr_warn("dropped pkg");
         return NF_DROP;
