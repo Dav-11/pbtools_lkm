@@ -5,7 +5,7 @@ import (
 	"net"
 	"bytes"
 
-	"address_book/gen"
+	"hello_world/gen"
 
 	"google.golang.org/protobuf/proto"
 )
