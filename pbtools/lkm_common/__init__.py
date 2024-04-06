@@ -1,10 +1,12 @@
 import os
+from enum import Enum
 
-from .generate_gitignore import generate_gitignore
-from .generate_main import generate_main
-from .generate_makefile import generate_makefile
-from .generate_pbtools_c import generate_pbtools_c
-from .generate_pbtools_h import generate_pbtools_h
+from ..lkm_common.generate_gitignore import generate_gitignore
+from ..lkm_netfilter.generate_main import generate_main_nf
+from ..lkm_common.generate_makefile import generate_makefile
+from ..lkm_common.generate_pbtools_c import generate_pbtools_c
+from ..lkm_common.generate_pbtools_h import generate_pbtools_h
+from ..lkm_udp_sock.generate_main import generate_main_udp
 from ..parser import SCALAR_VALUE_TYPES
 from ..parser import camel_to_snake_case
 from ..parser import parse_file
@@ -1353,7 +1355,8 @@ def generate(namespace, parsed, header_name, options):
 def generate_files(infiles,
                    import_paths=None,
                    output_directory='.',
-                   options=None):
+                   options=None,
+                   module_type=1):
     """Generate C source code from proto-file(s).
 
     """
@@ -1386,13 +1389,10 @@ def generate_files(infiles,
     basename = os.path.basename(infiles[0])
     name = camel_to_snake_case(os.path.splitext(basename)[0])
     filename_h = f'{name}.h'
-    filename_h = os.path.join(generate_path, filename_h)
+    filename_h = os.path.join('generated', filename_h)
 
     # generate makefile
     generate_makefile(module_name=name, output_directory=output_directory)
-
-    # generate main.c
-    generate_main(module_name=name, import_path=filename_h, output_directory=output_directory)
 
     # generate .gitignore
     generate_gitignore(output_directory=output_directory)
@@ -1400,3 +1400,12 @@ def generate_files(infiles,
     # generate pbtools lib files
     generate_pbtools_c(output_directory=output_directory)
     generate_pbtools_h(output_directory=output_directory)
+
+    print("Module Type: " + module_type)
+
+    # generate main.c
+    match module_type:
+        case '2':
+            generate_main_udp(module_name=name, import_path=filename_h, output_directory=output_directory)
+        case _:
+            generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)

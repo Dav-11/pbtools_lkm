@@ -1,8 +1,4 @@
-build:
-	go build -o bin/ main.go
 
-run:
-	go run main.go
 test:
 	$(MAKE) clean
 	go run cmd/command/main.go init test_gen
@@ -10,12 +6,7 @@ test:
 	$(MAKE) -C test_gen generate
 
 clean:
-	rm -rf 	test_gen
-	rm -rf 	lib
-	rm -rf 	lib64
-	rm -rf 	include
-	rm -f 	pyvenv.cfg
-	rm -rf 	bin
+	rm -rf 	venv
 
 .PHONY: docs
 docs:

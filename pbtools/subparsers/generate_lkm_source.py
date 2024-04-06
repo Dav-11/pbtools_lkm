@@ -7,7 +7,8 @@ def _do_generate_c_source(args):
     generate_files(args.infiles,
                    args.import_path,
                    args.output_directory,
-                   options)
+                   options,
+                   args.module_type)
 
 
 def add_subparser(subparsers):
@@ -20,7 +21,9 @@ def add_subparser(subparsers):
         default=[],
         help='Path(s) where to search for imports.')
     subparser.add_argument(
-        '-M', '--module_type',
+        '-T', '--module-type',
+        choices=['1', '2'],
+        dest='module_type',
         default=1,
         help='Type of LKM to generate. (1 -> Netfilter, 2 -> UDP_SOCKET).')
     subparser.add_argument(

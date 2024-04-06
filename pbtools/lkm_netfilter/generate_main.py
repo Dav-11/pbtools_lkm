@@ -168,7 +168,7 @@ module_exit({module_name}_exit);
 '''
 
 
-def generate_main(module_name, import_path, output_directory):
+def generate_main_nf(module_name, import_path, output_directory):
 
     filename = os.path.join(output_directory, 'main.c')
 

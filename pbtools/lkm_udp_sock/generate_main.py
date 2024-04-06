@@ -8,12 +8,10 @@ MAIN_NF_FMT = '''
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
-#include <linux/netfilter.h>
-#include <linux/netfilter_ipv4.h>
-#include <linux/tcp.h>
-#include <linux/udp.h>
-#include <linux/ip.h>
-#include <linux/skbuff.h>
+#include <linux/net.h>
+#include <linux/in.h>
+#include <linux/fs.h>
+#include <net/sock.h>
 
 #include "{import_path}"
 
@@ -22,145 +20,104 @@ MODULE_DESCRIPTION("{module_name}: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define MYPORT          60001
-#define MAX_PAYLOAD_LEN 1024
+#define MY_UDP_PORT         60001
+#define LISTEN_BACKLOG      5       // queue length for port
+#define BUFFER_SIZE         128
 
-//struct holding set of hook function options
-static struct nf_hook_ops nfho;
+static struct socket *sock;    /* listening (server) socket */
 
+// message struct to be sent
 typedef struct {{
-    uint32_t size;
-    unsigned char encoded[MAX_PAYLOAD_LEN];
+    int size;
+    uint8_t encoded[BUFFER_SIZE];
 }} message;
 
-
-unsigned int process_message(message *data)
+static void decode(message *data)
 {{
-
     /*
      * TODO: Place your code here
      */
 
-    return NF_ACCEPT;
-}}
-
-unsigned int handle_tcp_payload(struct sk_buff *skb)
-{{
-    struct iphdr *ip;
-    struct tcphdr *tcp;
-
-    unsigned char *payload;
-    char str[MAX_PAYLOAD_LEN];
-    memset(str, 0, MAX_PAYLOAD_LEN);
-
-    ip = ip_hdr(skb); // Update IP header pointer
-    tcp = tcp_hdr(skb); // Update TCP header pointer
-
-    uint32_t payload_len    = ntohs(ip->tot_len) - (ip->ihl * 4) - (tcp->doff * 4);
-
-    pr_info("Payload length: %d\\n", payload_len);
-
-    if (payload_len > 0) {{
-
-        payload = (unsigned char *)(tcp) + (tcp->doff * 4);
-        payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
-
-        // create message struct
-        message data;
-        memset(&data, 0, sizeof(data));
-
-        // copy in data.encoded memory from payload excluding first 4 bytes (len)
-        memcpy(data.encoded, payload + 4, payload_len - 4);
-
-        // get size (first 4 bytes)
-        data.size = (uint32_t) ntohl(*((uint32_t *) payload));
-        pr_info("Found size: %u\\n", data.size);
-
-        return process_message(&data);
-    }}
-
-    return NF_ACCEPT;
-}}
-
-unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
-{{
-    struct iphdr *ip;
-    struct tcphdr *tcp;
-
-    int non_linear = 0;
-    struct sk_buff *skb_linear;
-
-    if (!skb) return NF_ACCEPT;
-
-    ip = ip_hdr(skb);
-
-    // consider only tcp
-    if (ip->protocol == IPPROTO_TCP && ip->daddr == htonl(INADDR_LOOPBACK)) {{
-
-        // get header tcp
-        tcp = tcp_hdr(skb);
-
-        // Access fields of TCP header
-        uint16_t src_port = ntohs(tcp->source);
-        uint16_t dest_port = ntohs(tcp->dest);
-
-        if (dest_port == MYPORT && tcp->psh) {{
-
-            pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\\n", src_port, dest_port, tcp->psh);
-
-            // check if linear
-            non_linear = skb_is_nonlinear(skb);
-            if (non_linear) {{
-
-                //pr_info("is_nonlinear: %d", non_linear);
-
-                skb_linear = skb_copy(skb, GFP_ATOMIC); // Make a copy to preserve the original skb
-                if (!skb_linear) {{
-                    printk(KERN_ERR "Failed to allocate linearized skb\\n");
-                    return NF_DROP; // Drop packet if copy fails
-                }}
-
-                // linearize
-                int ret = skb_linearize(skb_linear);
-                if (ret != 0) {{
-
-                    printk(KERN_ERR "Failed to linearize skb\\n");
-                    kfree_skb(skb_linear); // Free the linearized skb
-                    return NF_DROP; // Drop packet if linearization fails
-                }}
-
-                // Process the linearized skb
-                return handle_tcp_payload(skb_linear);
-
-            }} else {{
-
-                return handle_tcp_payload(skb);
-            }}
-        }}
-    }}
-
-    return NF_ACCEPT;
+    pr_info("To implement");
 }}
 
 static int __init {module_name}_init(void)
 {{
-    pr_info("Loaded module\\n");
+    int err;
+    err = 0;
 
-    nfho.hook       = (nf_hookfn*)hook_func;    /* hook function */
-    nfho.hooknum    = NF_INET_LOCAL_IN;         /* packets to this machine */
-    nfho.pf         = PF_INET;                  /* IPv4 */
-    nfho.priority   = NF_IP_PRI_FIRST;          /* min hook priority */
+    message data;
+    memset(&data, 0, sizeof(data));
 
-    nf_register_net_hook(&init_net, &nfho);
-    pr_info("Registered nethook function\\n");
+    /* address to bind on */
+    struct sockaddr_in addr = {{
+        .sin_family    = AF_INET,
+        .sin_port    = htons(MY_UDP_PORT),
+        .sin_addr    = {{ htonl(INADDR_LOOPBACK) }}
+    }};
 
+    sock = NULL;
+
+    pr_info("Loaded module");
+
+    // create listening socket
+    err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
+    if (err < 0) {{
+
+        pr_err("Could not create socket: %d", err);
+        goto out;
+    }}
+
+    // reset err
+    err = 0;
+
+    // bind socket to loopback on port
+    err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
+    if (err < 0) {{
+
+        /* handle error */
+        pr_err("Could not bind socket: %d", err);
+        goto out;
+    }}
+
+    // reset err
+    err = 0;
+
+    // receive protobuf
+
+    struct msghdr msg;
+    struct kvec iov;
+
+    memset(&msg, 0, sizeof(struct msghdr));
+    memset(&iov, 0, sizeof(struct kvec));
+
+    iov.iov_base = data.encoded;
+    iov.iov_len = sizeof(data.encoded);
+
+    err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
+    if (err < 0) {{
+        pr_err("Failed to receive UDP data (protobuf): %d\\n", err);
+        goto out_release;
+    }}
+
+    data.size = sizeof(data.encoded);
+
+    pr_info("Received data, decoding... \\n");
+
+    // Process received data as needed
+    decode(&data);
+
+out_release:
+
+    /* cleanup listening socket */
+    sock_release(sock);
+out:
     return 0;
 }}
 
 static void __exit {module_name}_exit(void)
 {{
-    nf_unregister_net_hook(&init_net, &nfho);
-    pr_info("Removed module\\n");
+    pr_info("removed\\n");
 }}
 
 module_init({module_name}_init);
@@ -168,7 +125,7 @@ module_exit({module_name}_exit);
 '''
 
 
-def generate_main(module_name, import_path, output_directory):
+def generate_main_udp(module_name, import_path, output_directory):
 
     filename = os.path.join(output_directory, 'main.c')
 

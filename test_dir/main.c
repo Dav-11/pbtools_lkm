@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: MIT
 
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
@@ -10,23 +11,18 @@
 #include <linux/fs.h>
 #include <net/sock.h>
 
-{{if .ProtoContainsFloat }}
-#include <asm/uaccess.h>
-#include <asm/fpu/api.h>
-{{ end }}
-
-#include "{{ .PathToGenerated }}"
+#include "generated/address_book.h"
 
 MODULE_AUTHOR("Your Name Here");
-MODULE_DESCRIPTION("{{ .ModuleName }}: some description");
+MODULE_DESCRIPTION("address_book: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
 #define MY_UDP_PORT         60001
-#define LISTEN_BACKLOG		5       // queue length for port
+#define LISTEN_BACKLOG      5       // queue length for port
 #define BUFFER_SIZE         128
 
-static struct socket *sock;	/* listening (server) socket */
+static struct socket *sock;    /* listening (server) socket */
 
 // message struct to be sent
 typedef struct {
@@ -43,44 +39,44 @@ static void decode(message *data)
     pr_info("To implement");
 }
 
-static int __init {{ .ModuleName }}_init(void)
+static int __init address_book_init(void)
 {
     int err;
-	err = 0;
+    err = 0;
 
     message data;
     memset(&data, 0, sizeof(data));
 
-	/* address to bind on */
-	struct sockaddr_in addr = {
-		.sin_family	= AF_INET,
-		.sin_port	= htons(MY_UDP_PORT),
-		.sin_addr	= { htonl(INADDR_LOOPBACK) }
-	};
+    /* address to bind on */
+    struct sockaddr_in addr = {
+        .sin_family    = AF_INET,
+        .sin_port    = htons(MY_UDP_PORT),
+        .sin_addr    = { htonl(INADDR_LOOPBACK) }
+    };
 
     sock = NULL;
 
     pr_info("Loaded module");
 
     // create listening socket
-	err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
-	if (err < 0) {
+    err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
+    if (err < 0) {
 
         pr_err("Could not create socket: %d", err);
-		goto out;
-	}
+        goto out;
+    }
 
     // reset err
     err = 0;
 
     // bind socket to loopback on port
     err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
-	if (err < 0) {
+    if (err < 0) {
 
-		/* handle error */
-		pr_err("Could not bind socket: %d", err);
-		goto out;
-	}
+        /* handle error */
+        pr_err("Could not bind socket: %d", err);
+        goto out;
+    }
 
     // reset err
     err = 0;
@@ -88,7 +84,7 @@ static int __init {{ .ModuleName }}_init(void)
     // receive protobuf
 
     struct msghdr msg;
-	struct kvec iov;
+    struct kvec iov;
 
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
@@ -111,17 +107,16 @@ static int __init {{ .ModuleName }}_init(void)
 
 out_release:
 
-	/* cleanup listening socket */
-	sock_release(sock);
+    /* cleanup listening socket */
+    sock_release(sock);
 out:
-	return 0;
+    return 0;
 }
 
-static void __exit {{ .ModuleName }}_exit(void)
+static void __exit address_book_exit(void)
 {
     pr_info("removed\n");
 }
 
-module_init({{ .ModuleName }}_init);
-module_exit({{ .ModuleName }}_exit);
-
+module_init(address_book_init);
+module_exit(address_book_exit);
