@@ -1,6 +1,8 @@
 build:
-	go build -o bin/ cmd/command/main.go
+	go build -o bin/ main.go
 
+run:
+	go run main.go
 test:
 	$(MAKE) clean
 	go run cmd/command/main.go init test_gen
@@ -17,5 +19,5 @@ clean:
 
 .PHONY: docs
 docs:
-	docker build -t dav-11/pbtools_lkm:local -f docs/.docker/Dockerfile .
+	docker build -t dav-11/pbtools_lkm/docs:local -f docs/.docker/Dockerfile .
 	docker run --rm --name pbtools-lkm-docs -p 9090:80 dav-11/pbtools_lkm:local
