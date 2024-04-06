@@ -1,7 +1,10 @@
 import os
 
+from .generate_gitignore import generate_gitignore
 from .generate_main import generate_main
 from .generate_makefile import generate_makefile
+from .generate_pbtools_c import generate_pbtools_c
+from .generate_pbtools_h import generate_pbtools_h
 from ..parser import SCALAR_VALUE_TYPES
 from ..parser import camel_to_snake_case
 from ..parser import parse_file
@@ -1380,22 +1383,20 @@ def generate_files(infiles,
             fout.write(source)
 
     # get name and path
-    filename_makefile = os.path.join(output_directory, 'Makefile')
     basename = os.path.basename(infiles[0])
     name = camel_to_snake_case(os.path.splitext(basename)[0])
     filename_h = f'{name}.h'
     filename_h = os.path.join(generate_path, filename_h)
 
     # generate makefile
-    makefile_content = generate_makefile(module_name=basename)
-
-    with open(filename_makefile, 'w') as fout:
-        fout.write(makefile_content)
+    generate_makefile(module_name=name, output_directory=output_directory)
 
     # generate main.c
-    makefile_content = generate_main(module_name=basename, import_path=filename_h)
+    generate_main(module_name=name, import_path=filename_h, output_directory=output_directory)
 
-    filename_makefile = os.path.join(output_directory, 'main.c')
+    # generate .gitignore
+    generate_gitignore(output_directory=output_directory)
 
-    with open(filename_makefile, 'w') as fout:
-        fout.write(makefile_content)
+    # generate pbtools lib files
+    generate_pbtools_c(output_directory=output_directory)
+    generate_pbtools_h(output_directory=output_directory)

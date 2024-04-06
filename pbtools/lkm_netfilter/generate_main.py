@@ -1,3 +1,5 @@
+import os
+
 MAIN_NF_FMT = '''
 // SPDX-License-Identifier: MIT
 
@@ -13,10 +15,10 @@ MAIN_NF_FMT = '''
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
-#include "{ import_path }"
+#include "{import_path}"
 
 MODULE_AUTHOR("Your Name Here");
-MODULE_DESCRIPTION("{ module_name }: some description");
+MODULE_DESCRIPTION("{module_name}: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
@@ -56,7 +58,7 @@ unsigned int handle_tcp_payload(struct sk_buff *skb)
 
     uint32_t payload_len    = ntohs(ip->tot_len) - (ip->ihl * 4) - (tcp->doff * 4);
 
-    pr_info("Payload length: %d\n", payload_len);
+    pr_info("Payload length: %d\\n", payload_len);
 
     if (payload_len > 0) {{
 
@@ -72,7 +74,7 @@ unsigned int handle_tcp_payload(struct sk_buff *skb)
 
         // get size (first 4 bytes)
         data.size = (uint32_t) ntohl(*((uint32_t *) payload));
-        pr_info("Found size: %u\n", data.size);
+        pr_info("Found size: %u\\n", data.size);
 
         return process_message(&data);
     }}
@@ -104,7 +106,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
         if (dest_port == MYPORT && tcp->psh) {{
 
-            pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\n", src_port, dest_port, tcp->psh);
+            pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\\n", src_port, dest_port, tcp->psh);
 
             // check if linear
             non_linear = skb_is_nonlinear(skb);
@@ -114,7 +116,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
                 skb_linear = skb_copy(skb, GFP_ATOMIC); // Make a copy to preserve the original skb
                 if (!skb_linear) {{
-                    printk(KERN_ERR "Failed to allocate linearized skb\n");
+                    printk(KERN_ERR "Failed to allocate linearized skb\\n");
                     return NF_DROP; // Drop packet if copy fails
                 }}
 
@@ -122,7 +124,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
                 int ret = skb_linearize(skb_linear);
                 if (ret != 0) {{
 
-                    printk(KERN_ERR "Failed to linearize skb\n");
+                    printk(KERN_ERR "Failed to linearize skb\\n");
                     kfree_skb(skb_linear); // Free the linearized skb
                     return NF_DROP; // Drop packet if linearization fails
                 }}
@@ -135,14 +137,14 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
                 return handle_tcp_payload(skb);
             }}
         }}
-	}}
+    }}
 
     return NF_ACCEPT;
 }}
 
-static int __init { module_name }_init(void)
+static int __init {module_name}_init(void)
 {{
-    pr_info("Loaded module\n");
+    pr_info("Loaded module\\n");
 
     nfho.hook       = (nf_hookfn*)hook_func;    /* hook function */
     nfho.hooknum    = NF_INET_LOCAL_IN;         /* packets to this machine */
@@ -150,22 +152,26 @@ static int __init { module_name }_init(void)
     nfho.priority   = NF_IP_PRI_FIRST;          /* min hook priority */
 
     nf_register_net_hook(&init_net, &nfho);
-    pr_info("Registered nethook function\n");
+    pr_info("Registered nethook function\\n");
 
     return 0;
 }}
 
-static void __exit { module_name }_exit(void)
+static void __exit {module_name}_exit(void)
 {{
     nf_unregister_net_hook(&init_net, &nfho);
-    pr_info("Removed module\n");
+    pr_info("Removed module\\n");
 }}
 
-module_init({ module_name }_init);
-module_exit({ module_name }_exit);
+module_init({module_name}_init);
+module_exit({module_name}_exit);
 '''
 
 
-def generate_main(module_name, import_path):
-    return MAIN_NF_FMT.format(module_name=module_name, import_path=import_path)
+def generate_main(module_name, import_path, output_directory):
+
+    filename = os.path.join(output_directory, 'main.c')
+
+    with open(filename, 'w') as f:
+        f.write(MAIN_NF_FMT.format(module_name=module_name, import_path=import_path))
 

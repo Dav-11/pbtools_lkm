@@ -1,8 +1,5 @@
-import os
-
-from ..parser import camel_to_snake_case
-from ..c_source import generate_files
-from ..c_source import Options
+from ..lkm_common import Options
+from ..lkm_common import generate_files
 
 
 def _do_generate_c_source(args):
@@ -15,13 +12,17 @@ def _do_generate_c_source(args):
 
 def add_subparser(subparsers):
     subparser = subparsers.add_parser(
-        'generate_c_source',
-        description='Generate C source code from given protobuf file(s).')
+        'generate_lkm_netfilter',
+        description='Generate stub netfilter LKM from given protobuf file(s).')
     subparser.add_argument(
         '-I', '--import-path',
         action='append',
         default=[],
         help='Path(s) where to search for imports.')
+    subparser.add_argument(
+        '-M', '--module_type',
+        default=1,
+        help='Type of LKM to generate. (1 -> Netfilter, 2 -> UDP_SOCKET).')
     subparser.add_argument(
         '-o', '--output-directory',
         default='.',
