@@ -48,7 +48,7 @@ static void decode(message *data)
      * TODO: Place your code here
      */
      
-    pr_info("Data.encoded:\n");
+    pr_info("Data.encoded:\\n");
     print_hex(data.encoded, strlen(data.encoded));
 
     pr_info("To implement");
