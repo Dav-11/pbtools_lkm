@@ -4,6 +4,7 @@
 
 # exe
 **/main
+**/bin
 
 # LKM artifacts
 **/*.ko

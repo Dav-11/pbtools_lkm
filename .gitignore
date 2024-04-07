@@ -4,6 +4,7 @@
 # IDEs
 **/.idea
 **/.vscode
+**/.fleet
 
 # C extensions
 *.so
@@ -17,10 +18,8 @@ a.out*
 
 # test
 test_gen
-pbtools_lkm
-bin/
-
-!**/*.go
+test_gen_udp
+test_gen_nf
 
 # pyenv
 include
@@ -92,7 +91,6 @@ main
 *.gcno
 tests/crash-*
 tests/main_fuzzer*
-/address_book
 report.json
 lib/libpbtools.a
 Cargo.lock

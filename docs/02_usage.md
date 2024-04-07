@@ -1,50 +1,56 @@
 # Example Usage
-
 Here it is explained how to initialize, compile and load a new module
 
 ## Requirements
-- golang >= 1.21.6
 - python3
 - python3-env
 - python3-pip
 - make
 - gcc
-- linux os (x LKM)
+- Linux os
 
-### Build executable
-```
-make
-```
+## LKM Stub
+In this example we use the simple proto-file [hello_world.proto](examples/common/hello_world/proto/hello_world.proto)
 
-## Init module (creates new folder)
-```
-bin/pbtools_lkm init <folder_name>
-cd <folder_name>
-```
+```proto
+syntax = "proto3";
 
-## Edit proto files
-Delete `<folder_name>/proto/hello_world.proto` and write new proto files
+package hello_world;
 
-## Compile
+message Foo {
+    int32 bar = 1;
+}
 ```
-cd <folder_name>
-make requirements
-make generate
-```
+1. Create venv
+    ```shell
+    make requirements
+    ```
+2. Generate LKM stub from the proto-file. Replace `<module-type>` and `<output-folder>` with your choices.
+    ```shell
+    export PYTHONPATH=$(pwd)
+    ./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T <module-type> -o <output-folder> examples/common/hello_world/proto/hello_world.proto
+    ```
 
-## Edit main
-Edit `main.c` to implement functions
-
-## Compile and load module
-```
-cd <folder_name>
-make build
-make install
-make load
-```
-
-## Unload and clean
-```
-make unload
-make clean
-```
+## Compile the module
+1. Enter the created folder
+    ```shell
+    cd <output-folder>
+    ```
+2. Open `main.c` and add your code inside the function where you find this comment
+   ```c
+    /*
+     * TODO: Place your code here
+     */
+   ```
+3. Compile, install and load the module
+    ```shell
+    make
+    ```
+4. See the logs
+   ```shell
+   dmesg
+   ```
+5. (optional) Unload the module
+   ```shell
+   make unload
+   ```

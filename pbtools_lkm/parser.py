@@ -543,7 +543,7 @@ class ImportedProto:
 
 
 class Proto:
-    """A proto3-file. :func:`~pbtools.parse_file()` returns an instance of
+    """A proto3-file. :func:`~pbtools_lkm.parse_file()` returns an instance of
     this class.
 
     """
@@ -824,7 +824,7 @@ def find_file(filename, import_paths):
 
 def parse_file(filename, import_paths=None):
     """Parse given proto3-file `filename` and its imports. Returns a
-    :class:`~pbtools.parser.Proto` object.
+    :class:`~pbtools_lkm.parser.Proto` object.
 
     `import_paths` is a list of paths where to search for imported
     files.

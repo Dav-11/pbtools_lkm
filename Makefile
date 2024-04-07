@@ -1,21 +1,22 @@
-build:
-	go build -o bin/ cmd/command/main.go
+all: requirements test
 
 test:
-	$(MAKE) clean
-	go run cmd/command/main.go init test_gen
-	$(MAKE) -C test_gen requirements
-	$(MAKE) -C test_gen generate
+	export PYTHONPATH=$(shell pwd)
+	./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T udp_socket -o test_gen_udp examples/common/address_book/proto/address_book.proto
+	./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T netfilter -o test_gen_nf examples/common/address_book/proto/address_book.proto
+
+requirements:
+	python3 -m venv ./.venv
+	export PYTHONPATH=$(shell pwd)
+	./.venv/bin/pip3 install textparser
 
 clean:
-	rm -rf 	test_gen
-	rm -rf 	lib
-	rm -rf 	lib64
-	rm -rf 	include
-	rm -f 	pyvenv.cfg
-	rm -rf 	bin
+	rm -rf .venv
+	rm -rf test_gen
+	rm -rf test_gen_udp
+	rm -rf test_gen_nf
 
 .PHONY: docs
 docs:
-	docker build -t dav-11/pbtools_lkm:local -f docs/.docker/Dockerfile .
+	docker build -t dav-11/pbtools_lkm/docs:local -f docs/.docker/Dockerfile .
 	docker run --rm --name pbtools-lkm-docs -p 9090:80 dav-11/pbtools_lkm:local

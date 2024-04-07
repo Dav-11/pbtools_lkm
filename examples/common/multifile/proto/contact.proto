@@ -1,0 +1,13 @@
+syntax = "proto3";
+package contact;
+
+enum ContactType {
+  PHONE = 0;
+  EMAIL = 1;
+}
+
+message Contact {
+  int32 id = 1;
+  string value = 2;
+  ContactType type = 3;
+}
