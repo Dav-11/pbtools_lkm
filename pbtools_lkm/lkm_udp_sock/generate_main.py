@@ -32,11 +32,24 @@ typedef struct {{
     uint8_t encoded[BUFFER_SIZE];
 }} message;
 
+// Function to print payload
+void print_hex(const unsigned char *payload, unsigned int payload_len)
+{
+    unsigned int i;
+    for (i = 0; i < payload_len; ++i) {
+        pr_info("%02x -> %c\n", payload[i], payload[i]);
+    }
+    pr_info("\n");
+}
+
 static void decode(message *data)
 {{
     /*
      * TODO: Place your code here
      */
+     
+    pr_info("Data.encoded:\n");
+    print_hex(data.encoded, strlen(data.encoded));
 
     pr_info("To implement");
 }}
@@ -102,8 +115,6 @@ static int __init {module_name}_init(void)
 
     data.size = sizeof(data.encoded);
 
-    pr_info("Received data, decoding... \\n");
-
     // Process received data as needed
     decode(&data);
 
@@ -117,6 +128,10 @@ out:
 
 static void __exit {module_name}_exit(void)
 {{
+    
+    /* cleanup listening socket */
+    sock_release(sock);
+    
     pr_info("removed\\n");
 }}
 
