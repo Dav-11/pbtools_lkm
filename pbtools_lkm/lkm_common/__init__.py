@@ -1404,3 +1404,4 @@ def generate_files(infiles,
         generate_makefile(module_name=name, output_directory=output_directory, insmod_extra='&')
     else:
         generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)
+        generate_makefile(module_name=name, output_directory=output_directory)
