@@ -1389,7 +1389,7 @@ def generate_files(infiles,
     basename = os.path.basename(infiles[0])
     name = camel_to_snake_case(os.path.splitext(basename)[0])
     filename_h = f'{name}.h'
-    filename_h = os.path.join('generated', filename_h)
+    filepath_h = os.path.join('generated', filename_h)
 
     # generate .gitignore
     generate_gitignore(output_directory=output_directory)
@@ -1400,10 +1400,10 @@ def generate_files(infiles,
 
     # generate main.c
     if module_type == 'udp_socket':
-        name = name + '_udp'
-        generate_main_udp(module_name=name, import_path=filename_h, output_directory=output_directory)
-        generate_makefile(module_name=name, output_directory=output_directory, insmod_extra='&')
+        module_name = name + '_udp'
+        generate_main_udp(module_name=module_name, import_path=filepath_h, output_directory=output_directory)
+        generate_makefile(module_name=module_name, output_directory=output_directory, name=name, insmod_extra='&')
     else:
-        name = name + '_nf'
-        generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)
-        generate_makefile(module_name=name, output_directory=output_directory)
+        module_name = name + '_nf'
+        generate_main_nf(module_name=module_name, import_path=filepath_h, output_directory=output_directory)
+        generate_makefile(module_name=module_name, output_directory=output_directory, name=name)

@@ -13,7 +13,7 @@ obj-m			 += {module_name}.o
 {module_name}-y	 := \\
 	main.o \\
 	pbtools_lkm.o \\
-	generated/{module_name}.o
+	generated/{name}.o
 
 all: build install load
 
@@ -63,8 +63,8 @@ help:
 '''
 
 
-def generate_makefile(module_name, output_directory, insmod_extra=''):
+def generate_makefile(module_name, output_directory, name, insmod_extra=''):
     filename = os.path.join(output_directory, 'Makefile')
 
     with open(filename, 'w') as f:
-        f.write(MAKEFILE_FMT.format(module_name=module_name, insmod_extra=insmod_extra))
+        f.write(MAKEFILE_FMT.format(module_name=module_name, insmod_extra=insmod_extra, name=name))
