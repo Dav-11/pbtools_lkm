@@ -49,7 +49,7 @@ static void decode(message *data)
      */
      
     pr_info("Data.encoded:\\n");
-    print_hex(data.encoded, strlen(data.encoded));
+    print_hex(data->encoded, strlen(data->encoded));
 
     pr_info("To implement");
 }}
@@ -128,10 +128,6 @@ out:
 
 static void __exit {module_name}_exit(void)
 {{
-    
-    /* cleanup listening socket */
-    sock_release(sock);
-    
     pr_info("removed\\n");
 }}
 
