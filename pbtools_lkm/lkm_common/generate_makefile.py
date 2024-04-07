@@ -12,7 +12,7 @@ obj-m             += {module_name}.o
 
 {module_name}-y     := \\
     main.o \\
-    pbtools.o \\
+    pbtools_lkm.o \\
     generated/{module_name}.o
 
 all: build install load

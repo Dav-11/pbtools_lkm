@@ -3,7 +3,7 @@ import os
 PBTOOLS_C_FMT = '''
 // SPDX-License-Identifier: MIT
 
-#include "pbtools.h"
+#include "pbtools_lkm.h"
 
 typedef void (*repeated_item_read_t)(struct pbtools_decoder_t *self_p, void *items_p, int index);
 
@@ -2256,7 +2256,7 @@ const char *pbtools_error_code_to_string(int code)
 
 def generate_pbtools_c(output_directory):
 
-    filename = os.path.join(output_directory, 'pbtools.c')
+    filename = os.path.join(output_directory, 'pbtools_lkm.c')
 
     with open(filename, 'w') as fout:
         fout.write(PBTOOLS_C_FMT)

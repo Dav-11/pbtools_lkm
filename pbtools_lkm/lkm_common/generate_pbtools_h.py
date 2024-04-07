@@ -633,7 +633,7 @@ extern "C" {
 
 def generate_pbtools_h(output_directory):
 
-    filename = os.path.join(output_directory, 'pbtools.h')
+    filename = os.path.join(output_directory, 'pbtools_lkm.h')
 
     with open(filename, 'w') as f:
         f.write(PBTOOLS_H_FMT)

@@ -38,5 +38,5 @@ env PYTHONPATH=../.. \
 ### Usage
 ```shell
 env PYTHONPATH=../../.. \
-   python3 -m pbtools generate_c_source path/to/file.proto
+   python3 -m pbtools_lkm generate_c_source path/to/file.proto
 ```
