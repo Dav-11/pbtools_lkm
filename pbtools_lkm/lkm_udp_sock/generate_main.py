@@ -34,13 +34,13 @@ typedef struct {{
 
 // Function to print payload
 void print_hex(const unsigned char *payload, unsigned int payload_len)
-{
+{{
     unsigned int i;
-    for (i = 0; i < payload_len; ++i) {
+    for (i = 0; i < payload_len; ++i) {{
         pr_info("%02x -> %c\n", payload[i], payload[i]);
-    }
+    }}
     pr_info("\n");
-}
+}}
 
 static void decode(message *data)
 {{
