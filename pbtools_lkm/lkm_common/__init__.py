@@ -1356,7 +1356,7 @@ def generate_files(infiles,
                    import_paths=None,
                    output_directory='.',
                    options=None,
-                   module_type=1):
+                   module_type='netfilter'):
     """Generate C source code from proto-file(s).
 
     """
@@ -1401,11 +1401,8 @@ def generate_files(infiles,
     generate_pbtools_c(output_directory=output_directory)
     generate_pbtools_h(output_directory=output_directory)
 
-    print("Module Type: " + module_type)
-
     # generate main.c
-    match module_type:
-        case '2':
-            generate_main_udp(module_name=name, import_path=filename_h, output_directory=output_directory)
-        case _:
-            generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)
+    if module_type == 'udp_socket':
+        generate_main_udp(module_name=name, import_path=filename_h, output_directory=output_directory)
+    else:
+        generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)

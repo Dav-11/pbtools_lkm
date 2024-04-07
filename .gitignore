@@ -18,6 +18,8 @@ a.out*
 
 # test
 test_gen
+test_gen_udp
+test_gen_nf
 
 # pyenv
 include

@@ -1,8 +1,9 @@
-all: clean requirements test
+all: requirements test
 
 test:
 	export PYTHONPATH=$(shell pwd)
-	./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T 2 -o test_gen examples/common/address_book/proto/address_book.proto
+	./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T udp_socket -o test_gen_udp examples/common/address_book/proto/address_book.proto
+	./.venv/bin/python3 -m pbtools_lkm generate_lkm_source -T netfilter -o test_gen_nf examples/common/address_book/proto/address_book.proto
 
 requirements:
 	python3 -m venv ./.venv
@@ -12,6 +13,8 @@ requirements:
 clean:
 	rm -rf .venv
 	rm -rf test_gen
+	rm -rf test_gen_udp
+	rm -rf test_gen_nf
 
 .PHONY: docs
 docs:

@@ -22,7 +22,7 @@ def add_subparser(subparsers):
         help='Path(s) where to search for imports.')
     subparser.add_argument(
         '-T', '--module-type',
-        choices=['1', '2'],
+        choices=['netfilter', 'udp_socket'],
         dest='module_type',
         default=1,
         help='Type of LKM to generate. (1 -> Netfilter, 2 -> UDP_SOCKET).')
