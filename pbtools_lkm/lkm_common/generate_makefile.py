@@ -37,7 +37,7 @@ load:
     @echo
     @echo "--- Loading module into the kernel ---"
     @echo
-    sudo insmod $(PWD)/{module_name}.ko
+    sudo insmod $(PWD)/{module_name}.ko {insmod_extra}
 
 unload:
     @echo
@@ -63,13 +63,8 @@ help:
 '''
 
 
-def generate_makefile(module_name, output_directory):
+def generate_makefile(module_name, output_directory, insmod_extra=''):
     filename = os.path.join(output_directory, 'Makefile')
 
     with open(filename, 'w') as f:
-        f.write(MAKEFILE_FMT.format(module_name=module_name))
-
-
-def print_makefile(module_name):
-    content = MAKEFILE_FMT.format(module_name=module_name)
-    print(content)
+        f.write(MAKEFILE_FMT.format(module_name=module_name, insmod_extra=insmod_extra))

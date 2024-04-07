@@ -1391,9 +1391,6 @@ def generate_files(infiles,
     filename_h = f'{name}.h'
     filename_h = os.path.join('generated', filename_h)
 
-    # generate makefile
-    generate_makefile(module_name=name, output_directory=output_directory)
-
     # generate .gitignore
     generate_gitignore(output_directory=output_directory)
 
@@ -1404,5 +1401,6 @@ def generate_files(infiles,
     # generate main.c
     if module_type == 'udp_socket':
         generate_main_udp(module_name=name, import_path=filename_h, output_directory=output_directory)
+        generate_makefile(module_name=name, output_directory=output_directory, insmod_extra='&')
     else:
         generate_main_nf(module_name=name, import_path=filename_h, output_directory=output_directory)
