@@ -38,7 +38,7 @@ void print_hex(const unsigned char *payload, unsigned int payload_len)
     pr_info("\\n");
 }}
 
-unsigned int process_message(message *data)
+unsigned int process_message(char *buffer, int size)
 {{
     
     // example code
