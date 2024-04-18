@@ -1,13 +1,99 @@
 # pbtools_lkm
 
-[Google Protocol Buffers][protocol-buffers] implementation that runs as a linux kernel module.
+## Project Goal
+[**Protobuf**](https://protobuf.dev/) or **Protocol Buffer** are a language-neutral, platform-neutral mechanisms for serializing structured data into a binary format that can be sent on the network.
 
-> This is a university project, **DO NOT USE IT IN PROD** as is.
+It works by reading a `.proto` file containing the message specification and usually relies on libraries to generate the code to serialize and deserialize a struct/class corresponding to the message into a binary format that can then be sent through the network.
 
+Protobuf is the main encoding format used by [gRPC](https://grpc.io/), a widely used open-source communication framework created by Google.
+
+These technologies are used extensively in cloud-native environments, particularly in microservices architectures.
+
+Some famous examples of project that use protobuf are:
+  - [Kubernetes](https://github.com/kubernetes/kubernetes) uses grpc for communication between its components and to allow the user to probe his/her deployments for health and readiness status.
+  - [Open Telemetry](https://opentelemetry.io/) uses grpc as a fast way to send traces and logs.
+  - [Cloudflare](https://blog.cloudflare.com/moving-k8s-communication-to-grpc/) moved to grpc for some of its dns services.
+
+The Project goal is to port a C serialization/deserialization library inside the Linux kernel.
+
+> This is a university project and I am barely aware of what I am doing, so **DO NOT USE THIS IN PROD** as it is.
+
+## Project description
 The project is based (and is a fork of) [eerimoq/pbtools][pbtools] and shares its limitations:
 
 - Options, services (gRPC) and reserved fields are ignored.
 - Public imports are not implemented.
+
+The source python module was edited to be able to output two types of Linux kernel modules that can be used to perform protobuf operations:
+- A module that opens a UDP socket that receives a protobuf-encoded message.
+- A module that register a netfilter hook to filter protobuf-encoded TCP packets
+
+They both assume that the protobuf messages are prepended with the encoded message size in a 32 bit format.
+
+Both module types will load the encoded protobuf message into this struct:
+```C
+typedef struct {
+    int size;
+    uint8_t encoded[BUFFER_SIZE];
+} message;
+```
+Where size contains the size of the encoded protobuf and encoded is a fixed-size buffer that holds the encoded data.
+
+> The modules do not use dynamic memory allocation
+
+### [UDP Sockets](examples/socket_udp/README.md)
+![UDP Socket](docs/img/udp_sock.svg)
+Here an UDP socket is opened inside the LKM to receive a protobuf message.
+
+Inside the `main.c` folder you will find that the module opens a UDP socket and wait for a single packet:
+
+The `*_udp_init()` function creates an UDP socket, binds it to `INADDR_LOOPBACK`:`MY_UDP_PORT` (`localhost:60001` by default) and waits to receive a UDP packet.
+
+Once the packet is received the payload is extracted and:
+- A var `data` of type `message` is declared.
+- The first **32** bits are interpreted as the size of the encoded protobuf message (type int32) anp laced into `data.size`.
+- 
+
+The message is placed into the message structure and all the code to dela with the decode should be placed inside this function:
+```C
+static void decode(message *data)
+{
+    /*
+     * TODO: Place your code here
+     */
+     
+    pr_info("Data.encoded:\n");
+    print_hex(data->encoded, strlen(data->encoded));
+
+    pr_info("To implement");
+}
+```
+Some placeholder code is placed for debug reason: The code just print the received raw data in hex format.
+
+
+### [Netfilter](examples/netfilter/README.md)
+![Netfilter](docs/img/netfilter.svg)
+Here the module is used to filter tcp packets between two applications and apply some drop logics based on the protobuf content.
+
+Inside the `main.c` file you will find that the module register a netfilter hook function (`hook_func`) that filter **TCP** packets sent to **localhost:60001**.
+
+The `hook_func` check the packet  port, address, protocol (TCP only) and flags (only psh = 1), if the packet does not match our request we ignore it.
+
+Then `hook_func` calls the `handle_tcp_payload` function that, after checking if the payload length is > 0, takes the `sk_buff` struct and creates the `message` struct.
+
+Finally `handle_tcp_payload` calls `process_message`, here yous should decode your message and add the filter logic:
+```C
+unsigned int process_message(message *data)
+{
+
+    /*
+     * TODO: Place your code here
+     */
+
+    return NF_ACCEPT;
+}
+```
+> The function should return an int corresponding to a netfilter response es: NF_ACCEPT, NF_DROP.
 
 ## Example Usage
 Here it is explained how to initialize, compile and load a new module
@@ -84,52 +170,7 @@ Where size contains the size of the encoded protobuf and encoded is a fixed-size
 
 > The modules do not use dynamic memory allocation
 
-### [UDP Sockets](examples/socket_udp/README.md)
-![UDP Socket](docs/img/UDP_socket.png)
-Here an UDP socket is opened inside the LKM to receive a protobuf message.
 
-Inside the `main.c` folder you will find that the module opens a UDP socket and wait for a single packet.
-
-The message is placed into the message structure and all the code to dela with the decode should be placed inside this function:
-```C
-static void decode(message *data)
-{
-    /*
-     * TODO: Place your code here
-     */
-     
-    pr_info("Data.encoded:\n");
-    print_hex(data->encoded, strlen(data->encoded));
-
-    pr_info("To implement");
-}
-```
-Some placeholder code is placed for debug reason: The code just print the received raw data in hex format.
-
-
-### [Netfilter](examples/netfilter/README.md)
-![Netfilter](docs/img/netfilter.png)
-Here the module is used to filter tcp packets between two applications and apply some drop logics based on the protobuf content.
-
-Inside the `main.c` file you will find that the module register a netfilter hook function (`hook_func`) that filter **TCP** packets sent to **localhost:60001**.
-
-The `hook_func` check the packet  port, address, protocol (TCP only) and flags (only psh = 1), if the packet does not match our request we ignore it.
-
-Then `hook_func` calls the `handle_tcp_payload` function that, after checking if the payload length is > 0, takes the `sk_buff` struct and creates the `message` struct.
-
-Finally `handle_tcp_payload` calls `process_message`, here yous should decode your message and add the filter logic:
-```C
-unsigned int process_message(message *data)
-{
-
-    /*
-     * TODO: Place your code here
-     */
-
-    return NF_ACCEPT;
-}
-```
-> The function should return an int corresponding to a netfilter response es: NF_ACCEPT, NF_DROP.
 
 ## Float support
 Since floats are not commonly used inside the kernel some special attention have to be putted when the module need to make float operations:
