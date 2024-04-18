@@ -26,8 +26,6 @@ static struct socket *sock;    /* listening (server) socket */
 
 static void process_message(char *buffer, int size)
 {
-    pr_err("START DECODE");
-
     uint8_t workspace[1024];
 
     struct address_book_address_book_t *address_book_p;
@@ -38,10 +36,14 @@ static void process_message(char *buffer, int size)
     address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
     if (address_book_p == NULL) {
         pr_err("address_book_p is null");
+        return;
     }
 
-    size = address_book_address_book_decode(address_book_p, buffer, sizeof(buffer) );
-    WARN_ON(address_book_p->people.length != 1);
+    size = address_book_address_book_decode(address_book_p, buffer, size);
+    if (address_book_p->people.length != 1) {
+        pr_err("address_book_p->people.length = %d", address_book_p->people.length);
+        return;
+    }
 
     pr_info("people.length: %d", address_book_p->people.length);
 
@@ -151,15 +153,16 @@ static int __init address_book_udp_init(void)
     if (size > 0) {
 
         // Process received data as needed
-        process_message(buffer, size);
+        process_message(buffer + 4, size);
     }
 
     out_release:
 
-    /* cleanup listening socket */
-    sock_release(sock);
+        /* cleanup listening socket */
+        sock_release(sock);
+
     out:
-    return 0;
+        return 0;
 }
 
 static void __exit address_book_udp_exit(void)
