@@ -95,7 +95,7 @@ unsigned int handle_tcp_payload(struct sk_buff *skb)
         if (size > 0) {{
 
             // Process received data as needed
-            return process_message(buffer, size);
+            return process_message(buffer + 4, size);
         }}
     }}
 
