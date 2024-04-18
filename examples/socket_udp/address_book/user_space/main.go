@@ -21,14 +21,14 @@ func main() {
 		Name: "Kalle Kula",
 		Id: 56,
 		Email: "kalle.kula@foobar.com",
-		Phones: []*gen.Person_PhoneNumber{
+		Phones: []*gen.PhoneNumber{
 			{
 				Number: "+46701232345",
-				Type: gen.Person_HOME,
+				Type: gen.PhoneType_HOME,
 			},
 			{
 				Number: "+46999999999",
-				Type: gen.Person_WORK,
+				Type: gen.PhoneType_WORK,
 			},
 		},
 	}
