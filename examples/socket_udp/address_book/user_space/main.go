@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
-	"bytes"
 
 	"address_book/gen"
 
@@ -45,6 +45,15 @@ func main() {
         panic(err)
     }
 
+    // Get the message length in bytes
+    messageLength := len(data)
+    fmt.Println("length:", messageLength)
+
+    // Prepend the message length to the payload
+    buffer := make([]byte, 4+messageLength)
+    binary.BigEndian.PutUint32(buffer[:4], uint32(messageLength))
+    copy(buffer[4:], data)
+
 	// Connect to UDP server
 	address := fmt.Sprintf("127.0.0.1:%d", port)
     conn, err := net.Dial("udp", address)
@@ -53,12 +62,8 @@ func main() {
     }
     defer conn.Close()
 
-	var buffer bytes.Buffer
-
-	buffer.Write(data)
-
 	// Send the encoded data
-    if _, err = conn.Write(buffer.Bytes()); err != nil {
+    if _, err = conn.Write(buffer); err != nil {
 
 		panic(err)
 	}
