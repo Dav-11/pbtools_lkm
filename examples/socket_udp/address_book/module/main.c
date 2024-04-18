@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: MIT
 
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
@@ -12,27 +13,21 @@
 
 #include "../../../common/address_book/generated/address_book.h"
 
-MODULE_AUTHOR("Davide Collovigh");
-MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");
+MODULE_AUTHOR("Your Name Here");
+MODULE_DESCRIPTION("address_book_udp: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
 #define MY_UDP_PORT         60001
-#define LISTEN_BACKLOG		5       // queue length for port
+#define LISTEN_BACKLOG      5       // queue length for port
+#define BUFFER_SIZE         128
 
+static struct socket *sock;    /* listening (server) socket */
 
-static struct socket *sock;	/* listening (server) socket */
-//static struct socket *new_sock;	/* communication socket */
-
-
-// message struct to be sent
-typedef struct {
-    int size;
-    uint8_t encoded[128];
-} message;
-
-static void decode(message *data)
+static void process_message(char *buffer, int size)
 {
+    pr_err("START DECODE");
+
     uint8_t workspace[1024];
 
     struct address_book_address_book_t *address_book_p;
@@ -41,10 +36,11 @@ static void decode(message *data)
 
     /* Decode the message. */
     address_book_p = address_book_address_book_new(&workspace[0], sizeof(workspace));
-    WARN_ON(address_book_p == NULL);
+    if (address_book_p == NULL) {
+        pr_err("address_book_p is null");
+    }
 
-    int size = address_book_address_book_decode(address_book_p, &data->encoded[0], data->size);
-    //WARN_ON(size < 0);
+    size = address_book_address_book_decode(address_book_p, buffer, sizeof(buffer) );
     WARN_ON(address_book_p->people.length != 1);
 
     pr_info("people.length: %d", address_book_p->people.length);
@@ -70,46 +66,64 @@ static void decode(message *data)
     WARN_ON(phone_number_p->type != address_book_work_e);
 }
 
-static int __init pbtools_lkm_init(void)
+/**
+ * This function reads the first 4 bytes of the payload extracting the size of the message,
+ * if the size is bigger than the buffer size, returns -1
+ */
+static int extract_message_size(char *buffer)
 {
+    // extract first 4 bytes (int) as protobuf size
+    int size = (uint32_t) ntohl(*((uint32_t *) buffer));
 
+    if (size < BUFFER_SIZE) {
+
+        pr_info("Found size: %u\n", size);
+        return size;
+    } else {
+
+        pr_err("Payload is too big for the specified buffer: [wanted: %u, got: %d]\n", size, BUFFER_SIZE);
+        return -1;
+    }
+}
+
+static int __init address_book_udp_init(void)
+{
     int err;
-	err = 0;
+    err = 0;
 
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
 
-    message data;
-    memset(&data, 0, sizeof(data));
-
-	/* address to bind on */
-	struct sockaddr_in addr = {
-		.sin_family	= AF_INET,
-		.sin_port	= htons(MY_UDP_PORT),
-		.sin_addr	= { htonl(INADDR_LOOPBACK) }
-	};
+    /* address to bind on */
+    struct sockaddr_in addr = {
+            .sin_family    = AF_INET,
+            .sin_port    = htons(MY_UDP_PORT),
+            .sin_addr    = { htonl(INADDR_LOOPBACK) }
+    };
 
     sock = NULL;
 
     pr_info("Loaded module");
 
     // create listening socket
-	err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
-	if (err < 0) {
-		
+    err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
+    if (err < 0) {
+
         pr_err("Could not create socket: %d", err);
-		goto out;
-	}
+        goto out;
+    }
 
     // reset err
     err = 0;
 
     // bind socket to loopback on port
     err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
-	if (err < 0) {
-	
-		/* handle error */
-		pr_err("Could not bind socket: %d", err);
-		goto out;
-	}
+    if (err < 0) {
+
+        /* handle error */
+        pr_err("Could not bind socket: %d", err);
+        goto out;
+    }
 
     // reset err
     err = 0;
@@ -117,13 +131,13 @@ static int __init pbtools_lkm_init(void)
     // receive protobuf
 
     struct msghdr msg;
-	struct kvec iov;
+    struct kvec iov;
 
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
 
-    iov.iov_base = data.encoded;
-    iov.iov_len = sizeof(data.encoded);
+    iov.iov_base = buffer;
+    iov.iov_len = sizeof(buffer);
 
     err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
     if (err < 0) {
@@ -131,25 +145,27 @@ static int __init pbtools_lkm_init(void)
         goto out_release;
     }
 
-    data.size = sizeof(data.encoded);
+    // extract size of protobuf from buffer
+    int size = extract_message_size(buffer);
 
-    pr_info("Received data, decoding... \n");
+    if (size > 0) {
 
-    // Process received data as needed
-    decode(&data);
+        // Process received data as needed
+        process_message(buffer, size);
+    }
 
-out_release:
+    out_release:
 
-	/* cleanup listening socket */
-	sock_release(sock);
-out:
-	return 0;
+    /* cleanup listening socket */
+    sock_release(sock);
+    out:
+    return 0;
 }
 
-static void __exit pbtools_lkm_exit(void)
+static void __exit address_book_udp_exit(void)
 {
     pr_info("removed\n");
 }
 
-module_init(pbtools_lkm_init);
-module_exit(pbtools_lkm_exit);
+module_init(address_book_udp_init);
+module_exit(address_book_udp_exit);
