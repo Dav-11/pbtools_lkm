@@ -132,7 +132,7 @@ static int __init {module_name}_init(void)
     if (size > 0) {{
 
         // Process received data as needed
-        process_message(buffer, size);
+        process_message(buffer + 4, size);
     }}
 
 out_release:
