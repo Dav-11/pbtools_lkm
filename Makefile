@@ -15,6 +15,13 @@ clean:
 	rm -rf test_gen_udp
 	rm -rf test_gen_nf
 
+	$(MAKE) -C examples/socket_udp/address_book/module clean
+	$(MAKE) -C examples/socket_udp/hello_world/module clean
+
+	$(MAKE) -C examples/netfilter/address_book/module clean
+	$(MAKE) -C examples/netfilter/floats/module clean
+	$(MAKE) -C examples/netfilter/hello_world/module clean
+
 .PHONY: docs
 docs:
 	docker build -t dav-11/pbtools_lkm/docs:local -f docs/.docker/Dockerfile .

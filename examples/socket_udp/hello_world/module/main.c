@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: MIT
 
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
@@ -12,29 +13,18 @@
 
 #include "../../../common/hello_world/generated/hello_world.h"
 
-MODULE_AUTHOR("Davide Collovigh");
-MODULE_DESCRIPTION("pbtools_lkm_main: protobuf LKM");
+MODULE_AUTHOR("Your Name Here");
+MODULE_DESCRIPTION("hello_world_udp: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
 #define MY_UDP_PORT         60001
-#define LISTEN_BACKLOG		5       // queue length for port
+#define LISTEN_BACKLOG      5       // queue length for port
+#define BUFFER_SIZE         128
 
+static struct socket *sock;    /* listening (server) socket */
 
-static struct socket *sock;	/* listening (server) socket */
-//static struct socket *new_sock;	/* communication socket */
-
-
-// message struct to be sent
-typedef struct {
-    int size;
-    uint8_t encoded[128];
-} message;
-
-/**
- * This function decode the protobuf message and extracts bar
-*/
-static int get_bar(message *data)
+static int process_message(char *buffer, int size)
 {
     uint8_t workspace[1024];
 
@@ -44,55 +34,73 @@ static int get_bar(message *data)
     hello_world_str = hello_world_foo_new(&workspace[0], sizeof(workspace));
     WARN_ON(hello_world_str == NULL);
 
-    hello_world_foo_decode(hello_world_str, &data->encoded[0], data->size);
+    hello_world_foo_decode(hello_world_str, buffer, size);
 
     return (int) hello_world_str->bar;
 }
 
-static int __init pbtools_lkm_init(void)
+/**
+ * This function reads the first 4 bytes of the payload extracting the size of the message,
+ * if the size is bigger than the buffer size, returns -1
+ */
+static int extract_message_size(char *buffer)
 {
+    // extract first 4 bytes (int) as protobuf size
+    int size = (uint32_t) ntohl(*((uint32_t *) buffer));
 
+    if (size < BUFFER_SIZE) {
+
+        pr_info("Found size: %u\n", size);
+        return size;
+    } else {
+
+        pr_err("Payload is too big for the specified buffer: [wanted: %u, got: %d]\n", size, BUFFER_SIZE);
+        return -1;
+    }
+}
+
+static int __init hello_world_udp_init(void)
+{
     int err;
-	err = 0;
+    err = 0;
 
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
 
-    message data;
-    memset(&data, 0, sizeof(data));
-
-	/* address to bind on */
-	struct sockaddr_in addr = {
-		.sin_family	= AF_INET,
-		.sin_port	= htons(MY_UDP_PORT),
-		.sin_addr	= { htonl(INADDR_LOOPBACK) }
-	};
+    /* address to bind on */
+    struct sockaddr_in addr = {
+            .sin_family    = AF_INET,
+            .sin_port    = htons(MY_UDP_PORT),
+            .sin_addr    = { htonl(INADDR_LOOPBACK) }
+    };
 
     sock = NULL;
 
     pr_info("Loaded module");
 
     // create listening socket
-	err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
-	if (err < 0) {
-		
+    err = sock_create_kern(&init_net, PF_INET, SOCK_DGRAM, IPPROTO_UDP, &sock);
+    if (err < 0) {
+
         pr_err("Could not create socket: %d", err);
-		goto out;
-	}
+        goto out;
+    }
 
     // reset err
     err = 0;
 
     // bind socket to loopback on port
     err = sock->ops->bind (sock, (struct sockaddr *) &addr, sizeof(addr));
-	if (err < 0) {
-	
-		/* handle error */
-		pr_err("Could not bind socket: %d", err);
-		goto out;
-	}
+    if (err < 0) {
+
+        /* handle error */
+        pr_err("Could not bind socket: %d", err);
+        goto out;
+    }
 
     // reset err
     err = 0;
-    int bar;
+    int bar = 0;
 
     do {
 
@@ -103,8 +111,8 @@ static int __init pbtools_lkm_init(void)
         memset(&msg, 0, sizeof(struct msghdr));
         memset(&iov, 0, sizeof(struct kvec));
 
-        iov.iov_base = data.encoded;
-        iov.iov_len = sizeof(data.encoded);
+        iov.iov_base = buffer;
+        iov.iov_len = sizeof(buffer);
 
         err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
         if (err < 0) {
@@ -112,35 +120,37 @@ static int __init pbtools_lkm_init(void)
             goto out_release;
         }
 
-        data.size = sizeof(data.encoded);
+        // extract size of protobuf from buffer
+        int size = extract_message_size(buffer);
 
-        pr_info("Received data, decoding... \n");
+        if (size > 0) {
 
-        // Process received data as needed
-        bar = get_bar(&data);
+            // Process received data as needed
+            bar = process_message(buffer + 4, size);
+            pr_info("received: %d", bar);
+        } else {
 
-        pr_info("received bar: %d", bar);
-
-        if (bar <= 5) pr_info("bar: %d <= 5 so keep on looping", bar);
+            pr_err("received empty package -> Bye");
+            goto out_release;
+        }
 
     } while (bar <= 5);
 
-    pr_info("exit the loop");
-    
-out_release:
+    pr_info("%d > 5 => exit the loop", bar);
 
-	/* cleanup listening socket */
-	sock_release(sock);
+    out_release:
 
-    
-out:
-	return 0;
+        /* cleanup listening socket */
+        sock_release(sock);
+
+    out:
+        return 0;
 }
 
-static void __exit pbtools_lkm_exit(void)
+static void __exit hello_world_udp_exit(void)
 {
     pr_info("removed\n");
 }
 
-module_init(pbtools_lkm_init);
-module_exit(pbtools_lkm_exit);
+module_init(hello_world_udp_init);
+module_exit(hello_world_udp_exit);
