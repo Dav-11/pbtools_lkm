@@ -22,20 +22,28 @@ MODULE_DESCRIPTION("{module_name}: some description");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.1");
 
-#define MYPORT          60001
-#define MAX_PAYLOAD_LEN 1024
+#define MY_PORT          60001
+#define BUFFER_SIZE 1024
 
 //struct holding set of hook function options
 static struct nf_hook_ops nfho;
 
-typedef struct {{
-    uint32_t size;
-    unsigned char encoded[MAX_PAYLOAD_LEN];
-}} message;
-
+// Function to print payload
+void print_hex(const unsigned char *payload, unsigned int payload_len)
+{{
+    unsigned int i;
+    for (i = 0; i < payload_len; ++i) {{
+        pr_info("%02x -> %c\\n", payload[i], payload[i]);
+    }}
+    pr_info("\\n");
+}}
 
 unsigned int process_message(message *data)
 {{
+    
+    // example code
+    pr_info("Encoded data:\\n");
+    print_hex((unsigned char *)buffer, size);
 
     /*
      * TODO: Place your code here
@@ -44,39 +52,51 @@ unsigned int process_message(message *data)
     return NF_ACCEPT;
 }}
 
+/**
+ * This function reads the first 4 bytes of the payload extracting the size of the message,
+ * if the size is bigger than the buffer size, returns -1
+ */
+static int extract_message_size(char *buffer)
+{{
+    // extract first 4 bytes (int) as protobuf size
+    int size = (uint32_t) ntohl(*((uint32_t *) buffer));
+
+    if (size < BUFFER_SIZE) {{
+
+        pr_info("Found size: %u\\n", size);
+        return size;
+    }} else {{
+
+        pr_err("Payload is too big for the specified buffer: [wanted: %u, got: %d]\\n", size, BUFFER_SIZE);
+        return -1;
+    }}
+}}
+
 unsigned int handle_tcp_payload(struct sk_buff *skb)
 {{
     struct iphdr *ip;
     struct tcphdr *tcp;
 
-    unsigned char *payload;
-    char str[MAX_PAYLOAD_LEN];
-    memset(str, 0, MAX_PAYLOAD_LEN);
+    unsigned char *buffer;
 
     ip = ip_hdr(skb); // Update IP header pointer
     tcp = tcp_hdr(skb); // Update TCP header pointer
 
-    uint32_t payload_len    = ntohs(ip->tot_len) - (ip->ihl * 4) - (tcp->doff * 4);
-
+    uint32_t payload_len = ntohs(ip->tot_len) - (ip->ihl * 4) - (tcp->doff * 4);
     pr_info("Payload length: %d\\n", payload_len);
 
     if (payload_len > 0) {{
 
-        payload = (unsigned char *)(tcp) + (tcp->doff * 4);
-        payload_len = min(payload_len, MAX_PAYLOAD_LEN); // Limit payload length to avoid excessive printing
+        buffer = (unsigned char *)(tcp) + (tcp->doff * 4);
 
-        // create message struct
-        message data;
-        memset(&data, 0, sizeof(data));
+        // extract size of protobuf from buffer
+        int size = extract_message_size(buffer);
 
-        // copy in data.encoded memory from payload excluding first 4 bytes (len)
-        memcpy(data.encoded, payload + 4, payload_len - 4);
+        if (size > 0) {{
 
-        // get size (first 4 bytes)
-        data.size = (uint32_t) ntohl(*((uint32_t *) payload));
-        pr_info("Found size: %u\\n", data.size);
-
-        return process_message(&data);
+            // Process received data as needed
+            return process_message(buffer, size);
+        }}
     }}
 
     return NF_ACCEPT;
@@ -104,7 +124,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
         uint16_t src_port = ntohs(tcp->source);
         uint16_t dest_port = ntohs(tcp->dest);
 
-        if (dest_port == MYPORT && tcp->psh) {{
+        if (dest_port == MY_PORT && tcp->psh) {{
 
             pr_info("Received TCP packet. Source Port:%d, Destination Port:%d PUSH: %d\\n", src_port, dest_port, tcp->psh);
 

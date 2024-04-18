@@ -36,7 +36,7 @@ void print_hex(const unsigned char *payload, unsigned int payload_len)
     pr_info("\\n");
 }}
 
-static void decode(char *buffer, int size)
+static void process_message(char *buffer, int size)
 {{
 
     pr_info("Encoded data:\\n");
@@ -126,13 +126,13 @@ static int __init {module_name}_init(void)
         goto out_release;
     }}
 
-    // extract data struct from buffer
+    // extract size of protobuf from buffer
     int size = extract_message_size(buffer);
 
     if (size > 0) {{
 
         // Process received data as needed
-        decode(buffer, size);
+        process_message(buffer, size);
     }}
 
 out_release:
