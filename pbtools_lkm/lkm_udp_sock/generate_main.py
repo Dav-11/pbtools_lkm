@@ -72,8 +72,8 @@ static int __init {module_name}_init(void)
     int err;
     err = 0;
 
-    message data;
-    memset(&data, 0, sizeof(data));
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
 
     /* address to bind on */
     struct sockaddr_in addr = {{
@@ -117,8 +117,8 @@ static int __init {module_name}_init(void)
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
 
-    iov.iov_base = data.encoded;
-    iov.iov_len = sizeof(data.encoded);
+    iov.iov_base = buffer;
+    iov.iov_len = sizeof(buffer);
 
     err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
     if (err < 0) {{
