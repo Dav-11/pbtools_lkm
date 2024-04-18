@@ -110,7 +110,6 @@ static int __init {module_name}_init(void)
     err = 0;
 
     // receive protobuf
-
     struct msghdr msg;
     struct kvec iov;
 
