@@ -26,12 +26,6 @@ MODULE_VERSION("0.1");
 
 static struct socket *sock;    /* listening (server) socket */
 
-// message struct to be sent
-typedef struct {{
-    int size;
-    uint8_t encoded[BUFFER_SIZE];
-}} message;
-
 // Function to print payload
 void print_hex(const unsigned char *payload, unsigned int payload_len)
 {{
@@ -42,16 +36,35 @@ void print_hex(const unsigned char *payload, unsigned int payload_len)
     pr_info("\\n");
 }}
 
-static void decode(message *data)
+static void process_message(char *buffer, int size)
 {{
+
+    pr_info("Encoded data:\\n");
+    print_hex((unsigned char *)buffer, size);
+
     /*
      * TODO: Place your code here
      */
-     
-    pr_info("Data.encoded:\\n");
-    print_hex(data->encoded, strlen(data->encoded));
+}}
 
-    pr_info("To implement");
+/**
+ * This function reads the first 4 bytes of the payload extracting the size of the message,
+ * if the size is bigger than the buffer size, returns -1
+ */
+static int extract_message_size(char *buffer)
+{{
+    // extract first 4 bytes (int) as protobuf size
+    int size = (uint32_t) ntohl(*((uint32_t *) buffer));
+
+    if (size < BUFFER_SIZE) {{
+
+        pr_info("Found size: %u\\n", size);
+        return size;
+    }} else {{
+
+        pr_err("Payload is too big for the specified buffer: [wanted: %u, got: %d]\\n", size, BUFFER_SIZE);
+        return -1;
+    }}
 }}
 
 static int __init {module_name}_init(void)
@@ -59,8 +72,8 @@ static int __init {module_name}_init(void)
     int err;
     err = 0;
 
-    message data;
-    memset(&data, 0, sizeof(data));
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
 
     /* address to bind on */
     struct sockaddr_in addr = {{
@@ -97,15 +110,14 @@ static int __init {module_name}_init(void)
     err = 0;
 
     // receive protobuf
-
     struct msghdr msg;
     struct kvec iov;
 
     memset(&msg, 0, sizeof(struct msghdr));
     memset(&iov, 0, sizeof(struct kvec));
 
-    iov.iov_base = data.encoded;
-    iov.iov_len = sizeof(data.encoded);
+    iov.iov_base = buffer;
+    iov.iov_len = sizeof(buffer);
 
     err = kernel_recvmsg(sock, &msg, &iov, 1, 1024, MSG_WAITALL);
     if (err < 0) {{
@@ -113,10 +125,14 @@ static int __init {module_name}_init(void)
         goto out_release;
     }}
 
-    data.size = sizeof(data.encoded);
+    // extract size of protobuf from buffer
+    int size = extract_message_size(buffer);
 
-    // Process received data as needed
-    decode(&data);
+    if (size > 0) {{
+
+        // Process received data as needed
+        process_message(buffer + 4, size);
+    }}
 
 out_release:
 
