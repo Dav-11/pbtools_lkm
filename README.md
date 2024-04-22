@@ -16,7 +16,7 @@ Protobuf and gRPC are used extensively in cloud-native environments, particularl
 
 Some famous examples of projects that use protobuf are:
   - [Kubernetes](https://github.com/kubernetes/kubernetes) uses gRPC for communication between its components and to allow the user to probe his/her deployments for health and readiness status.
-  - [Open Telemetry](https://opentelemetry.io/) uses grpc as a fast way to send traces and logs.
+  - [Open Telemetry](https://opentelemetry.io/) uses gRPC as a fast way to send traces and logs.
   - [Cloudflare](https://blog.cloudflare.com/moving-k8s-communication-to-grpc/) moved to gRPC for some of its DNS services.
 
 The Project goal is to port a protobuf serialization/deserialization library inside the Linux kernel.
@@ -45,7 +45,7 @@ Here is an overview of the main part of the model's flow:
 1. Inside the `main.c` the `<your_mod_name>_init` opens a UDP socket and waits for a single packet on `INADDR_LOOPBACK`:`MY_UDP_PORT` (`localhost:60001` by default).
 2. Once the packet is received (by `kernel_recvmsg()`), the payload is stored inside the `buffer` variable.
 3. The main then reads the first 32 bits containing the protobuf length by calling the `extract_message_size(buffer)` function.
-4. If the size is > 0 then the `process_message(buffer + 4, size)` function is called. Note that the starting address of the protobuf data is buffer + 4 as the first 4 bytes are for the size (32 bits).
+4. If the size is > 0 then the `process_message(buffer + 4, size)` function is called. Note that the starting address of the protobuf data is `buffer + 4` as the first 4 bytes are for the size (32 bits).
 5. The user is required to fill the  `process_message(char *buffer, int size)` body with the encode/decode for his message, for which functions and structs are provided inside the ` <your_mod_name>.h` that is already included.
 
 > Some placeholder code is placed for debug reason: The code just print the received raw data in hex format.
@@ -132,12 +132,12 @@ Here is an overview of the main part of the model's flow:
 2. The `hook_func()` function then selects only the packets that:
     - Are TCP
     - Are directed to localhost (`INADDR_LOOPBACK`)
-    - Are directed to MY_PORT (by default is 60001)
-    - Have the PSH flag set to `1`
-3. The `hook_func()` also ensures that the selected packets are linearized (their payload is all contiguous) so that we can read it as a contiguous byte array. than it calls calls `handle_tcp_payload()`
-4. The `handle_tcp_payload()` reads the first 32 bits containing the protobuf length by calling the `extract_message_size(buffer)` function.
-5. If the size is > 0 then the `process_message(buffer + 4, size)` function is called. Note that the starting address of the protobuf data is buffer + 4 as the first 4 bytes are for the size (32 bits).
-6. The user is required to fill the  `process_message(char *buffer, int size)` body with the encoding/decoding for his message (for which functions and structs are provided inside the ` <your_mod_name>.h` that is already included) and the logic to decide the packet's fate.
+    - Are directed to `MY_PORT` (by default is 60001)
+    - Have the `PSH` flag set to `1`
+3. The `hook_func()` also ensures that the selected packets are linearized (their payload is all contiguous) so that we can read it as a contiguous byte array. It then calls `handle_tcp_payload()`.
+4. The `handle_tcp_payload()` function reads the first 32 bits containing the protobuf length by calling `extract_message_size(buffer)`.
+5. If the size is > 0 then the `process_message(buffer + 4, size)` function is called. Note that the starting address of the protobuf data is `buffer + 4` as the first 4 bytes are for the size (32 bits).
+6. The user is required to fill the  `process_message(char *buffer, int size)` body with the code for encoding/decoding his/her message(s) (for which functions and structs are provided inside the ` <your_mod_name>.h` that is already included) and the logic to decide the message's fate.
 > The function should return an int corresponding to a netfilter response es: NF_ACCEPT, NF_DROP.
 
 #### Example Usage
@@ -238,10 +238,10 @@ This project changed the original pbtools' float types:
 This way the FPU does not have to be enabled if the float values are not processed inside the module.
 
 ### Instructions
-> This instruction are intended for x86_64 platform (tested on EPYC processor)
+> These instructions are intended for x86_64 platform (tested on EPYC processor)
 
 > You can find a working example [here](examples/netfilter/floats/module/main.c)
-1. Include the floats header into `main.c`
+1. Include the float headers into `main.c`
    ```C
    #include <asm/uaccess.h>
    #include <asm/fpu/api.h>
