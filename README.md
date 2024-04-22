@@ -28,7 +28,7 @@ This project aims to port the [pbtools](https://github.com/eerimoq/pbtools) Pyth
 
 In particular, the source library was modified to generate, from the `.proto` file, c code that can run in kernel space.
 
-To better understand the usage of this library, it generates alongside the protobuf serialization/deserialization code, a LKM stub that the user can use as a starting point for implementing his/her own LKM module.
+To better understand some possible use cases for this library, it generates, alongside the protobuf serialization/deserialization code, an LKM stub that the user can use as a starting point to start implementing his/her module.
 
 The generated LKM stub can be of one of two types:
 - A module that opens a UDP socket that receives a protobuf-encoded message.
