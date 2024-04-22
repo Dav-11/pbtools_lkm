@@ -24,16 +24,28 @@ The Project goal is to port a protobuf serialization/deserialization library ins
 > This is a university project and I am barely aware of what I am doing, so, please, **DO NOT USE THIS IN PROD** as it is.
 
 ## Project description
-The project is based (and is a fork of) [eerimoq/pbtools][pbtools] and shares its limitations:
+This project aims to port the [pbtools](https://github.com/eerimoq/pbtools) Python library to the Linux kernel.
 
-- Options, services (gRPC) and reserved fields are ignored.
-- Public imports are not implemented.
+In particular, the source library was modified to generate, from the `.proto` file, c code that can run in kernel space.
 
-The source python module was edited to be able to output two types of Linux kernel modules that can be used to perform protobuf operations:
+To better understand the usage of this library, it generates alongside the protobuf serialization/deserialization code, a LKM stub that the user can use as a starting point for implementing his/her own LKM module.
+
+The generated LKM stub can be of one of two types:
 - A module that opens a UDP socket that receives a protobuf-encoded message.
-- A module that register a netfilter hook to filter protobuf-encoded TCP packets
+- A module that registers a netfilter hook to filter protobuf-encoded TCP packets.
 
-They both assume that the protobuf messages are prepended with the encoded message size in a 32 bit format.
+The serialization/deserialization code will be the same between the two types, but they will have different `main.c` and different ways to interact with protobuf messages.
+
+They both assume that the protobuf messages are prepended with the encoded message size in a 32-bit format.
+
+```text
+message:
+
++-----------------+---------------------------------------+
+|  message size   |    protobuf-encoded message           |
+|    (4 bytes)    |       (message size bytes)            |
++-----------------+---------------------------------------+
+```
 
 > The modules do not use dynamic memory allocation
 
@@ -62,7 +74,7 @@ Here is an overview of the main part of the model's flow:
     - Linux os
     - [Linux build requirements](https://www.kernel.org/doc/html/latest/process/changes.html)
 2. Clone this repository and open a terminal inside it
-3. Create a python virtual environment and install dependencies
+3. Create a Python virtual environment and install dependencies
     ```shell
     make venv
     ```
@@ -123,7 +135,7 @@ Here is an overview of the main part of the model's flow:
 
 ### [Netfilter](examples/netfilter/README.md)
 ![Netfilter](docs/img/netfilter.svg)
-Here the module is used to filter tcp packets between two applications and apply some drop logics based on the protobuf content.
+Here the module is used to filter TCP packets between two applications and apply some drop logic based on the protobuf content.
 
 Here is an overview of the main part of the model's flow:
 1. Inside the `main.c` the `<your_mod_name>_init` registers the function `hook_func` to be triggered every time a packet matches these rules:
@@ -152,7 +164,7 @@ Here is an overview of the main part of the model's flow:
     - Linux os
     - [Linux build requirements](https://www.kernel.org/doc/html/latest/process/changes.html)
 2. Clone this repository and open a terminal inside it
-3. Create a python virtual environment and install dependencies
+3. Create a Python virtual environment and install dependencies
     ```shell
     make venv
     ```
@@ -241,7 +253,7 @@ This way the FPU does not have to be enabled if the float values are not process
 > These instructions are intended for x86_64 platform (tested on EPYC processor)
 
 > You can find a working example [here](examples/netfilter/floats/module/main.c)
-1. Include the float headers into `main.c`
+1. Include the float headers inside `main.c`
    ```C
    #include <asm/uaccess.h>
    #include <asm/fpu/api.h>
@@ -271,8 +283,14 @@ This way the FPU does not have to be enabled if the float values are not process
    ```
 > This part is highly architecture dependant see [here](https://stackoverflow.com/questions/1556142/sse-register-return-with-sse-disabled) for more details
 
+## Limitations
+The project is based (and is a fork of) [eerimoq/pbtools][pbtools] and shares its limitations:
+
+- Options, services (gRPC) and reserved fields are ignored.
+- Public imports are not implemented.
+
 ## Roadmap
-- [ ] Support for ebpf filter generation
+- [ ] Support for eBPF filter generation
 
 ## Special thanks to
 - [eerimoq/pbtools][pbtools] for the library I used for the port
