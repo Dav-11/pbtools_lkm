@@ -1,4 +1,10 @@
 # eBPF + kfunc
+> This section is a WIP and does not currently work !
+
+To use this, pull also submodules
+```shell
+git submodule update --init --recursive
+```
 
 ## ENV
 - linux kernel v6.7.9
