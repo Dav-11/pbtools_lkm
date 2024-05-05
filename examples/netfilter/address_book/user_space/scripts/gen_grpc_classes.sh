@@ -10,7 +10,7 @@ LOCAL_PATH="$(dirname $FULL_PATH)"
 # PATHS
 cd "$LOCAL_PATH"/..
 ROOT_PATH="$(pwd)"
-PROTO_PATH="$ROOT_PATH"/proto
+PROTO_PATH="$ROOT_PATH"/../../../common/address_book/proto/
 OUT_PATH="$ROOT_PATH"/gen
 
 # install go plugins

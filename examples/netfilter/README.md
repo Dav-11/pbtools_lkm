@@ -6,76 +6,36 @@
 ```shell
 cd <example_folder>
 ```
-2. Setup python venv and install requirements
-```shell
-make -C module requirements
-```
-3. Regenerate code from protos
-```shell
-make -C module generate
-```
-4. Compile module
+2. Compile module
 ```shell
 make -C module
 ```
-5. Install module
+3. Install module
 ```shell
 make -C module install
 ```
-6. Load module
+4. Load module
 ```shell
 make -C module load
 ```
-7. Start server app
+5. Compile and run server app
 ```shell
 make -c user_space server 
 ```
-8. Start the client (in a new shell)
+6. Compile and run client app (in a new shell)
 ```shell
 make -c user_space client
 ```
 
+> You should see logs using `dmesg`
+
 ## Examples
 
 ### Hello World
-This hook drops all packages where bar > 50
-
-#### Proto
-```proto
-message Foo {
-    int32 bar = 1;
-}
-```
-
+This hook drops all messages where Foo.bar > 50
 
 ### Address Book
-Drops packages that have less than 2 `WORK` phone number inside the the first `Person.Phones`.
+Drops messages that have less than 2 `WORK` phone number inside the the first `Person.Phones`.
 
-#### Proto
-```proto
-syntax = "proto3";
-
-package address_book;
-
-enum PhoneType {
-    MOBILE = 0;
-    HOME = 1;
-    WORK = 2;
-}
-
-message PhoneNumber {
-    string number = 1;
-    PhoneType type = 2;
-}
-
-message Person {
-    string name = 1;
-    int32 id = 2;
-    string email = 3;
-    repeated PhoneNumber phones = 4;
-}
-
-message AddressBook {
-    repeated Person people = 1;
-}
-```
+### Floats
+Drops messages where Foo.bar > 10.1 .
