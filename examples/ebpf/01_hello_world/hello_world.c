@@ -28,13 +28,11 @@ int main() {
   hello_world_bpf__load(skel);
 
   // loop until char c is received
-  char c = '0';
-
   printf("Type 'c' to exit...\n");
-  while (getchar() != c) {
+  while (getchar() != 'c') {
     sleep(1);
   }
-  printf("Character '%c' received!\n", c);
+  printf("Bye\n");
 
   // attach prog
   err = hello_world_bpf__attach(skel);
