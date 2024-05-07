@@ -1,4 +1,1 @@
-
-*.skel.h
-
-include/
+.output/
